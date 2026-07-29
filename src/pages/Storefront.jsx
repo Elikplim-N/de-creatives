@@ -7,9 +7,9 @@ import Footer from '../components/storefront/Footer';
 
 export default function Storefront() {
   return (
-    <div className="storefront animate-fade-up">
+    <div className="storefront">
       <Navbar />
-      <main id="main-content" style={{ minHeight: '100vh' }}>
+      <main id="main-content" className="animate-fade-up" style={{ minHeight: '100vh' }}>
         <Hero />
         
         {/* New Arrivals Section - placed before Editorial */}
