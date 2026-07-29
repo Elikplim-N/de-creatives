@@ -1,0 +1,176 @@
+/* Shared Admin Styles */
+.admin-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.admin-page-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--white);
+}
+.admin-page-subtitle {
+  font-family: var(--font-accent);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-top: var(--space-1);
+}
+.admin-page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+.admin-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+.admin-section-title {
+  font-family: var(--font-accent);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Overview */
+.admin-overview { display: flex; flex-direction: column; gap: var(--space-6); }
+.admin-overview__date {
+  font-family: var(--font-accent);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.admin-overview__stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+
+/* Stat Cards */
+.admin-stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  transition: border-color var(--transition-base), transform var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+.admin-stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.admin-stat-card--turquoise::before { background: var(--turquoise); }
+.admin-stat-card--success::before { background: var(--success); }
+.admin-stat-card--info::before { background: var(--turquoise); }
+.admin-stat-card--warning::before { background: var(--warning); }
+.admin-stat-card:hover { border-color: var(--border-medium); transform: translateY(-2px); }
+
+.admin-stat-card__icon { font-size: 1.75rem; flex-shrink: 0; }
+.admin-stat-card__info { flex: 1; min-width: 0; }
+.admin-stat-card__label {
+  font-family: var(--font-accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.admin-stat-card__value {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  color: var(--white);
+  line-height: 1;
+}
+.admin-stat-card__trend { flex-shrink: 0; }
+
+/* Overview Body */
+.admin-overview__body {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-6);
+}
+
+/* Top Products */
+.admin-overview__product-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.admin-overview__product-thumb {
+  width: 44px; height: 44px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  background: var(--bg-elevated);
+}
+.admin-overview__product-name {
+  font-family: var(--font-accent);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.admin-overview__product-sku {
+  font-family: var(--font-accent);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Activity */
+.admin-overview__activity-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.admin-overview__activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.admin-overview__activity-item:last-child { border-bottom: none; }
+.admin-overview__activity-dot {
+  width: 8px; height: 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+.admin-overview__activity-dot--success { background: var(--success); }
+.admin-overview__activity-dot--warning { background: var(--warning); }
+.admin-overview__activity-dot--turquoise { background: var(--turquoise); }
+.admin-overview__activity-dot--info { background: var(--info); }
+.admin-overview__activity-text {
+  font-family: var(--font-accent);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+.admin-overview__activity-time {
+  font-family: var(--font-accent);
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .admin-overview__stats { grid-template-columns: repeat(2, 1fr); }
+  .admin-overview__body { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .admin-overview__stats { grid-template-columns: 1fr; }
+}

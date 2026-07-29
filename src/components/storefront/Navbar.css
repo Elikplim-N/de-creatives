@@ -1,0 +1,242 @@
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  height: var(--nav-height);
+  background: var(--black);
+  transition: background var(--transition-base), backdrop-filter var(--transition-base), border-color var(--transition-base);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.navbar--scrolled {
+  background: rgba(10,10,10,0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom-color: var(--border-medium);
+}
+.navbar__inner {
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--space-8);
+}
+.navbar__left {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  justify-self: start;
+}
+
+/* Logo */
+.navbar__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  text-decoration: none;
+  justify-self: center;
+}
+.navbar__logo-img {
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(1);
+  transition: filter var(--transition-fast);
+}
+.navbar__logo-text-img {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(1);
+  transition: filter var(--transition-fast);
+}
+.navbar__logo:hover .navbar__logo-img,
+.navbar__logo:hover .navbar__logo-text-img {
+  filter: brightness(1.2);
+}
+.navbar__logo-text {
+  display: none;
+}
+
+/* Nav Links */
+.navbar__links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+.navbar__link {
+  font-family: var(--font-accent);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+  position: relative;
+}
+.navbar__link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0; right: 100%;
+  height: 1px;
+  background: var(--turquoise);
+  transition: right var(--transition-base);
+}
+.navbar__link:hover { color: var(--white); }
+.navbar__link:hover::after { right: 0; }
+
+/* Actions */
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  justify-self: end;
+}
+.navbar__action-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  transition: color var(--transition-fast), background var(--transition-fast);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.navbar__action-btn:hover {
+  color: var(--white);
+  background: var(--white-08);
+}
+.navbar__badge {
+  position: absolute;
+  top: 4px; right: 4px;
+  width: 16px; height: 16px;
+  border-radius: var(--radius-full);
+  background: var(--white-40);
+  color: var(--black);
+  font-size: 0.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-accent);
+}
+.navbar__badge--primary { background: var(--turquoise); }
+
+.navbar__admin-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: var(--radius-full);
+  color: var(--text-muted);
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+.navbar__admin-link:hover {
+  color: var(--turquoise);
+  background: var(--turquoise-muted);
+}
+
+/* Search */
+.navbar__search-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--white-08);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-full);
+  padding: 0 var(--space-4);
+  height: 40px;
+  min-width: 260px;
+}
+.navbar__search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: var(--font-body);
+}
+.navbar__search-input::placeholder { color: var(--text-muted); }
+
+/* Hamburger */
+.navbar__hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 40px; height: 40px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 8px;
+}
+.navbar__hamburger span {
+  display: block;
+  width: 100%; height: 1.5px;
+  background: var(--text-secondary);
+  border-radius: 2px;
+  transition: all var(--transition-base);
+  transform-origin: center;
+}
+.navbar__hamburger--open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); background: var(--white); }
+.navbar__hamburger--open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+.navbar__hamburger--open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); background: var(--white); }
+
+/* Mobile Menu */
+.navbar__mobile {
+  position: absolute;
+  top: 100%; left: 0; right: 0;
+  background: rgba(10,10,10,0.97);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height var(--transition-slow), padding var(--transition-slow);
+}
+.navbar__mobile--open {
+  max-height: 400px;
+  padding: var(--space-6) 0;
+}
+.navbar__mobile-links {
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--space-8);
+}
+.navbar__mobile-link {
+  font-family: var(--font-accent);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: color var(--transition-fast);
+}
+.navbar__mobile-link:hover { color: var(--white); }
+.navbar__mobile-divider { height: var(--space-4); }
+.navbar__mobile-admin { color: var(--turquoise); border-bottom: none; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .navbar__links { gap: var(--space-6); }
+}
+@media (max-width: 768px) {
+  .navbar__inner { padding: 0 var(--space-4); }
+  .navbar__links { display: none; }
+  .navbar__hamburger { display: flex; }
+  .navbar__logo-img { height: 28px; }
+  .navbar__logo-text-img { height: 24px; }
+  .navbar__admin-link { display: none; }
+}
+@media (max-width: 480px) {
+  .navbar__logo-text-img { height: 20px; }
+}
