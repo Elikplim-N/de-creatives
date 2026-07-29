@@ -75,13 +75,13 @@
 }
 
 .footer__logo-img {
-  height: 48px;
+  height: 90px;
   width: auto;
   object-fit: contain;
 }
 
 .footer__logo-text-img {
-  height: 36px;
+  height: 68px;
   width: auto;
   object-fit: contain;
 }
@@ -174,10 +174,10 @@
     padding: var(--space-3) var(--space-4);
   }
   .footer__logo-img {
-    height: 40px;
+    height: 60px;
   }
   .footer__logo-text-img {
-    height: 30px;
+    height: 46px;
   }
 }
 
