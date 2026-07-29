@@ -6,7 +6,7 @@
 create extension if not exists "uuid-ossp";
 
 -- 1. CATEGORIES TABLE
-create table public.categories (
+create table public.de_categories (
   id text primary key,
   name text not null,
   slug text not null unique,
@@ -15,11 +15,11 @@ create table public.categories (
 );
 
 -- 2. PRODUCTS TABLE
-create table public.products (
+create table public.de_products (
   id text primary key,
   sku text not null unique,
   name text not null,
-  category_id text references public.categories(id) on delete set null,
+  category_id text references public.de_categories(id) on delete set null,
   price numeric(10, 2) not null check (price >= 0),
   compare_price numeric(10, 2) check (compare_price is null or compare_price >= 0),
   description text,
@@ -37,7 +37,7 @@ create table public.products (
 );
 
 -- 3. TESTIMONIALS TABLE
-create table public.testimonials (
+create table public.de_testimonials (
   id uuid default gen_random_uuid() primary key,
   name text not null,
   location text,
@@ -48,7 +48,7 @@ create table public.testimonials (
 );
 
 -- 4. ORDERS TABLE (For checkout logging)
-create table public.orders (
+create table public.de_orders (
   id uuid default gen_random_uuid() primary key,
   customer_name text not null,
   customer_email text not null,
@@ -63,56 +63,56 @@ create table public.orders (
 -- ========================================================
 
 -- Enable RLS on all tables
-alter table public.categories enable row level security;
-alter table public.products enable row level security;
-alter table public.testimonials enable row level security;
-alter table public.orders enable row level security;
+alter table public.de_categories enable row level security;
+alter table public.de_products enable row level security;
+alter table public.de_testimonials enable row level security;
+alter table public.de_orders enable row level security;
 
 -- Categories Policies
 create policy "Allow public read access to categories"
-  on public.categories for select
+  on public.de_categories for select
   using (true);
 
 create policy "Allow authenticated admin write access to categories"
-  on public.categories for all
+  on public.de_categories for all
   to authenticated
   using (true)
   with check (true);
 
 -- Products Policies
 create policy "Allow public read access to products"
-  on public.products for select
+  on public.de_products for select
   using (true);
 
 create policy "Allow authenticated admin write access to products"
-  on public.products for all
+  on public.de_products for all
   to authenticated
   using (true)
   with check (true);
 
 -- Testimonials Policies
 create policy "Allow public read access to testimonials"
-  on public.testimonials for select
+  on public.de_testimonials for select
   using (true);
 
 create policy "Allow authenticated admin write access to testimonials"
-  on public.testimonials for all
+  on public.de_testimonials for all
   to authenticated
   using (true)
   with check (true);
 
 -- Orders Policies
 create policy "Allow public insert access to orders"
-  on public.orders for insert
+  on public.de_orders for insert
   with check (true);
 
 create policy "Allow authenticated admin read access to orders"
-  on public.orders for select
+  on public.de_orders for select
   to authenticated
   using (true);
 
 create policy "Allow authenticated admin update access to orders"
-  on public.orders for update
+  on public.de_orders for update
   to authenticated
   using (true)
   with check (true);
@@ -122,14 +122,14 @@ create policy "Allow authenticated admin update access to orders"
 -- ========================================================
 
 -- Insert Categories
-insert into public.categories (id, name, slug, description) values
+insert into public.de_categories (id, name, slug, description) values
 ('cat-1', 'Streetwear', 'streetwear', 'Bold, urban-inspired pieces that make a statement.'),
 ('cat-2', 'Essentials', 'essentials', 'Premium basics engineered for everyday luxury.'),
 ('cat-3', 'Limited Edition', 'limited-edition', 'Exclusive drops with limited-run designs.'),
 ('cat-4', 'Accessories', 'accessories', 'The details that define your look.');
 
 -- Insert Products
-insert into public.products (id, sku, name, category_id, price, compare_price, description, colors, color_names, sizes, stock, is_new, is_featured, is_bestseller, rating, review_count, images) values
+insert into public.de_products (id, sku, name, category_id, price, compare_price, description, colors, color_names, sizes, stock, is_new, is_featured, is_bestseller, rating, review_count, images) values
 ('p-001', 'DC-SW-001', 'DC Signature Tee — Black', 'cat-1', 89.99, 120.00, 'The original. Ultra-soft premium cotton, oversized silhouette. The iconic DC Creatives logo printed front-centre. This is what started it all.', array['#0A0A0A', '#FAFAFA'], array['Phantom Black', 'Clean White'], array['XS', 'S', 'M', 'L', 'XL', 'XXL'], 47, true, true, false, 4.80, 124, array['/products/tee-black-girl-tree.jpg', '/products/tee-black-girl-smile.jpg']),
 ('p-002', 'DC-ES-002', 'DC Classic Tee — White', 'cat-2', 64.99, null, 'Walk by faith. Clean white oversized tee with the DC Creatives vertical back print. A wardrobe cornerstone built for everyday wear.', array['#FAFAFA', '#0A0A0A'], array['Clean White', 'Phantom Black'], array['XS', 'S', 'M', 'L', 'XL'], 83, false, true, true, 4.90, 287, array['/products/tee-white-back.jpg', '/products/tee-duo-white-black.jpg']),
 ('p-003', 'DC-LE-003', 'DC Bracket Logo Tee', 'cat-3', 219.99, null, 'Limited run. The bracket-frame DC Creatives logo in full teal-and-white on deep black. Only available while stock lasts — collector''s status guaranteed.', array['#0A0A0A'], array['Void Black'], array['S', 'M', 'L', 'XL'], 12, true, true, false, 5.00, 41, array['/products/tee-black-girl-palm.jpg', '/products/tee-black-girl-garden.jpg']),
@@ -140,7 +140,7 @@ insert into public.products (id, sku, name, category_id, price, compare_price, d
 ('p-008', 'DC-ES-008', 'DC Garden Series Tee', 'cat-2', 79.99, null, 'Lush. Tropical. DE Creatives. Shot in the garden series — the DC bracket logo pops bold against the greens. Premium 300GSM cotton.', array['#0A0A0A'], array['Jet Black'], array['XS', 'S', 'M', 'L', 'XL'], 55, false, false, true, 4.80, 218, array['/products/tee-black-girl-garden.jpg', '/products/tee-black-girl-smile2.jpg']);
 
 -- Insert Testimonials
-insert into public.testimonials (name, location, text, rating, avatar) values
+insert into public.de_testimonials (name, location, text, rating, avatar) values
 ('Kwame A.', 'Accra, Ghana', 'DE Creatives completely changed how I approach fashion. The quality is unreal — these pieces are investment-grade.', 5, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80'),
 ('Zara M.', 'Lagos, Nigeria', 'The bracket logo tee is the most premium item I own. Worth every cedi. Will be ordering again.', 5, 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=80'),
 ('Olu B.', 'London, UK', 'Fast shipping, incredible packaging, and the fits are exactly as advertised. DE Creatives is the real deal.', 5, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=80');

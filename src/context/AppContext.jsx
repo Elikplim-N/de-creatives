@@ -26,16 +26,16 @@ export function AppProvider({ children }) {
 
     const loadData = async () => {
       try {
-        // Fetch Categories
+        // Fetch Categories from de_categories
         const { data: catData, error: catError } = await supabase
-          .from('categories')
+          .from('de_categories')
           .select('*');
         if (catError) throw catError;
         if (catData) setCategories(catData);
 
-        // Fetch Products
+        // Fetch Products from de_products
         const { data: prodData, error: prodError } = await supabase
-          .from('products')
+          .from('de_products')
           .select('*');
         if (prodError) throw prodError;
         if (prodData) {
@@ -137,7 +137,7 @@ export function AppProvider({ children }) {
           review_count: 0
         };
 
-        const { error } = await supabase.from('products').insert([newProductDb]);
+        const { error } = await supabase.from('de_products').insert([newProductDb]);
         if (error) throw error;
 
         // update local state
@@ -177,7 +177,7 @@ export function AppProvider({ children }) {
           delete dbUpdates.category;
         }
 
-        const { error } = await supabase.from('products').update(dbUpdates).eq('id', id);
+        const { error } = await supabase.from('de_products').update(dbUpdates).eq('id', id);
         if (error) throw error;
 
         setProducts(prev => prev.map(p => {
@@ -205,7 +205,7 @@ export function AppProvider({ children }) {
     const product = products.find(p => p.id === id);
     if (supabase) {
       try {
-        const { error } = await supabase.from('products').delete().eq('id', id);
+        const { error } = await supabase.from('de_products').delete().eq('id', id);
         if (error) throw error;
 
         setProducts(prev => prev.filter(p => p.id !== id));
@@ -231,7 +231,7 @@ export function AppProvider({ children }) {
           description: category.description
         };
 
-        const { error } = await supabase.from('categories').insert([newCat]);
+        const { error } = await supabase.from('de_categories').insert([newCat]);
         if (error) throw error;
 
         setCategories(prev => [...prev, newCat]);
@@ -255,7 +255,7 @@ export function AppProvider({ children }) {
     const cat = categories.find(c => c.id === id);
     if (supabase) {
       try {
-        const { error } = await supabase.from('categories').delete().eq('id', id);
+        const { error } = await supabase.from('de_categories').delete().eq('id', id);
         if (error) throw error;
 
         setCategories(prev => prev.filter(c => c.id !== id));
