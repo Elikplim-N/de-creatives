@@ -14,7 +14,7 @@ export default function AdminLogin() {
     e.preventDefault();
     setLoading(true);
     await new Promise(r => setTimeout(r, 800)); // Simulated auth delay
-    const success = adminLogin(form.username, form.password);
+    const success = await adminLogin(form.username, form.password);
     setLoading(false);
     if (success) navigate('/admin');
   };
@@ -57,8 +57,8 @@ export default function AdminLogin() {
           <div className="admin-login__demo-hint" role="note">
             <span className="admin-login__demo-icon">💡</span>
             <div>
-              <strong>Demo Credentials</strong>
-              <p>Username: <code>admin</code> · Password: <code>decreatives2024</code></p>
+              <strong>Production / Demo Login</strong>
+              <p>Email/Username: <code>admin</code> (or your Supabase Auth email) · Password: <code>decreatives2024</code></p>
             </div>
           </div>
 
@@ -74,7 +74,7 @@ export default function AdminLogin() {
             )}
 
             <div className="form-group">
-              <label htmlFor="admin-username" className="form-label">Username</label>
+              <label htmlFor="admin-username" className="form-label">Email or Username</label>
               <div className="admin-login__input-wrap">
                 <svg className="admin-login__input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -83,7 +83,7 @@ export default function AdminLogin() {
                   id="admin-username"
                   type="text"
                   className="form-input admin-login__input"
-                  placeholder="Enter username"
+                  placeholder="Enter email or username"
                   value={form.username}
                   onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
                   autoComplete="username"
