@@ -68,20 +68,21 @@
 
 .footer__logo-group {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-4);
+  gap: 4px;
   margin-bottom: var(--space-2);
 }
 
 .footer__logo-img {
-  height: 90px;
+  height: 28px;
   width: auto;
   object-fit: contain;
 }
 
 .footer__logo-text-img {
-  height: 68px;
+  height: 70px;
   width: auto;
   object-fit: contain;
 }
@@ -174,10 +175,10 @@
     padding: var(--space-3) var(--space-4);
   }
   .footer__logo-img {
-    height: 60px;
+    height: 22px;
   }
   .footer__logo-text-img {
-    height: 46px;
+    height: 52px;
   }
 }
 

@@ -22,10 +22,10 @@ export default function Footer() {
       {/* Main Footer - Centered Layout */}
       <div className="footer__main">
         <div className="container footer__content-centered">
-          {/* Logo group showing both logos */}
+          {/* Logo group showing both logos stacked */}
           <div className="footer__logo-group">
-            <img src="/favicon_nav.png" alt="DE Logo" className="footer__logo-img" />
             <img src="/logo.png" alt="DE Creatives Logo" className="footer__logo-text-img" />
+            <img src="/favicon_nav.png" alt="DE Logo" className="footer__logo-img" />
           </div>
 
           {/* Slogan */}
