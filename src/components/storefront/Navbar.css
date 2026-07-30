@@ -47,7 +47,7 @@
   transition: filter var(--transition-fast);
 }
 .navbar__logo-text-img {
-  height: 48px;
+  height: 40px;
   width: auto;
   object-fit: contain;
   filter: brightness(1);
@@ -235,10 +235,10 @@
   .navbar__links { display: none; }
   .navbar__hamburger { display: flex; }
   .navbar__logo-img { height: 16px; }
-  .navbar__logo-text-img { height: 38px; }
+  .navbar__logo-text-img { height: 32px; }
   .navbar__admin-link { display: none; }
 }
 @media (max-width: 480px) {
   .navbar__logo-img { height: 14px; }
-  .navbar__logo-text-img { height: 32px; }
+  .navbar__logo-text-img { height: 28px; }
 }
