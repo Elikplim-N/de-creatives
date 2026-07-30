@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import './ProductCard.css';
 
 export default function ProductCard({ product }) {
-  const { toggleWishlist, isInWishlist, addToCart } = useApp();
+  const { toggleWishlist, isInWishlist, addToCart, formatPrice } = useApp();
   const wishlisted = isInWishlist(product.id);
   const discount = product.comparePrice
     ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
@@ -90,11 +90,11 @@ export default function ProductCard({ product }) {
         <div className="product-card__bottom">
           <div className="product-card__price-wrap">
             <span className="product-card__price">
-              ${(product.price || 0).toFixed(2)}
+              {formatPrice(product.price)}
             </span>
             {product.comparePrice && (
               <span className="product-card__compare">
-                ${product.comparePrice.toFixed(2)}
+                {formatPrice(product.comparePrice)}
               </span>
             )}
           </div>

@@ -7,7 +7,7 @@ import './ProductDetail.css';
 
 export default function ProductDetail() {
   const id = useParams().id;
-  const { products, addToCart, toggleWishlist, isInWishlist } = useApp();
+  const { products, addToCart, toggleWishlist, isInWishlist, formatPrice } = useApp();
   const product = products.find(p => p.id === id);
 
   const [selectedSize, setSelectedSize] = useState(null);
@@ -109,10 +109,10 @@ export default function ProductDetail() {
               </div>
 
               <div className="product-detail__price-row">
-                <span className="product-detail__price">${(product.price || 0).toFixed(2)}</span>
+                <span className="product-detail__price">{formatPrice(product.price)}</span>
                 {product.comparePrice && (
                   <>
-                    <span className="product-detail__compare">${product.comparePrice.toFixed(2)}</span>
+                    <span className="product-detail__compare">{formatPrice(product.comparePrice)}</span>
                     <span className="badge badge-danger">Save {discount}%</span>
                   </>
                 )}

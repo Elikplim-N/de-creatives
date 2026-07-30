@@ -29,6 +29,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ProductDetail from './pages/ProductDetail';
 import Toast from './components/shared/Toast';
 import AdminRoute from './components/shared/AdminRoute';
+import CartDrawer from './components/storefront/CartDrawer';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -50,6 +51,7 @@ export default function App() {
           } />
         </Routes>
         <Toast />
+        <CartDrawer />
       </AppProvider>
     </>
   );

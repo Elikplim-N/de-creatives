@@ -270,6 +270,8 @@ export function AppProvider({ children }) {
     }
   }, [categories, showToast]);
 
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
   const addToCart = useCallback((product, size, color) => {
     setCart(prev => {
       const existing = prev.find(i => i.id === product.id && i.size === size && i.color === color);
@@ -279,8 +281,28 @@ export function AppProvider({ children }) {
       );
       return [...prev, { ...product, size, color, qty: 1, cartId: `${product.id}-${size}-${color}` }];
     });
+    setIsCartOpen(true); // Auto-open cart drawer
     showToast('Added to cart!', 'success');
   }, [showToast]);
+
+  const removeFromCart = useCallback((cartId) => {
+    setCart(prev => prev.filter(item => item.cartId !== cartId));
+    showToast('Removed from cart', 'default');
+  }, [showToast]);
+
+  const updateCartQty = useCallback((cartId, newQty) => {
+    if (newQty <= 0) {
+      removeFromCart(cartId);
+      return;
+    }
+    setCart(prev => prev.map(item =>
+      item.cartId === cartId ? { ...item, qty: newQty } : item
+    ));
+  }, [removeFromCart]);
+
+  const clearCart = useCallback(() => {
+    setCart([]);
+  }, []);
 
   const toggleWishlist = useCallback((product) => {
     setWishlist(prev => {
@@ -295,6 +317,21 @@ export function AppProvider({ children }) {
   }, [showToast]);
 
   const isInWishlist = useCallback((id) => wishlist.some(p => p.id === id), [wishlist]);
+
+  // Currency State and Helpers
+  const [currency, setCurrency] = useState('USD');
+
+  const currencies = {
+    USD: { symbol: '$', rate: 1.0, label: 'USD' },
+    EUR: { symbol: '€', rate: 0.92, label: 'EUR' },
+    GBP: { symbol: '£', rate: 0.78, label: 'GBP' }
+  };
+
+  const formatPrice = useCallback((priceInUsd) => {
+    const cur = currencies[currency] || currencies.USD;
+    const converted = (priceInUsd || 0) * cur.rate;
+    return `${cur.symbol}${converted.toFixed(2)}`;
+  }, [currency]);
 
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
@@ -314,6 +351,9 @@ export function AppProvider({ children }) {
       addProduct, updateProduct, deleteProduct,
       addCategory, deleteCategory,
       addToCart, toggleWishlist, isInWishlist,
+      removeFromCart, updateCartQty, clearCart,
+      currency, setCurrency, currencies, formatPrice,
+      isCartOpen, setIsCartOpen,
     }}>
       {children}
     </AppContext.Provider>
