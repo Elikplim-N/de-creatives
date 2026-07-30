@@ -6,6 +6,7 @@ const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [authLoading, setAuthLoading] = useState(!!supabase);
   const [loginError, setLoginError] = useState('');
   const [products, setProducts] = useState(initialProducts);
   const [categories, setCategories] = useState(initialCategories);
@@ -55,9 +56,12 @@ export function AppProvider({ children }) {
 
     loadData();
 
-    // Listen for auth state changes to keep dashboard synced
+    // Listen for auth state changes to keep dashboard synced.
+    // The first callback fires with the restored session (or null) before
+    // any user interaction, so it also tells us when the initial check is done.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAdminLoggedIn(!!session);
+      setAuthLoading(false);
     });
 
     return () => {
@@ -71,6 +75,7 @@ export function AppProvider({ children }) {
     // 1. Try local credentials first (username/password shortcut)
     if (usernameOrEmail === adminCredentials.username && password === adminCredentials.password) {
       setIsAdminLoggedIn(true);
+      setAuthLoading(false);
       showToast('Welcome back, Admin!', 'success');
       return true;
     }
@@ -347,7 +352,7 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      isAdminLoggedIn, loginError, adminLogin, adminLogout,
+      isAdminLoggedIn, authLoading, loginError, adminLogin, adminLogout,
       products, categories, cart, cartCount, wishlist, toast,
       activeCategory, setActiveCategory,
       searchQuery, setSearchQuery,

@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import './AdminLogin.css';
 
 export default function AdminLogin() {
-  const { adminLogin, loginError } = useApp();
+  const { adminLogin, loginError, isAdminLoggedIn, authLoading } = useApp();
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && isAdminLoggedIn) navigate('/admin', { replace: true });
+  }, [authLoading, isAdminLoggedIn, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
