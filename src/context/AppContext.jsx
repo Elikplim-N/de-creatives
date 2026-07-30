@@ -271,6 +271,7 @@ export function AppProvider({ children }) {
   }, [categories, showToast]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
 
   const addToCart = useCallback((product, size, color) => {
     setCart(prev => {
@@ -311,6 +312,7 @@ export function AppProvider({ children }) {
         showToast('Removed from wishlist', 'default');
         return prev.filter(p => p.id !== product.id);
       }
+      setIsWishlistOpen(true); // Auto-open wishlist drawer
       showToast('Added to wishlist!', 'success');
       return [...prev, product];
     });
@@ -323,6 +325,7 @@ export function AppProvider({ children }) {
 
   const currencies = {
     USD: { symbol: '$', rate: 1.0, label: 'USD' },
+    GHS: { symbol: 'GH₵ ', rate: 15.20, label: 'GHS' },
     EUR: { symbol: '€', rate: 0.92, label: 'EUR' },
     GBP: { symbol: '£', rate: 0.78, label: 'GBP' }
   };
@@ -354,6 +357,7 @@ export function AppProvider({ children }) {
       removeFromCart, updateCartQty, clearCart,
       currency, setCurrency, currencies, formatPrice,
       isCartOpen, setIsCartOpen,
+      isWishlistOpen, setIsWishlistOpen,
     }}>
       {children}
     </AppContext.Provider>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import Navbar from '../components/storefront/Navbar';
 import Footer from '../components/storefront/Footer';
 import './Manifesto.css';
@@ -76,9 +77,9 @@ export default function Manifesto() {
             <p className="manifesto-cta__text">
               Garments rooted in culture. Crafted to be worn with purpose.
             </p>
-            <a href="/shop" className="btn btn-outline btn-lg" style={{ marginTop: 'var(--space-8)' }}>
+            <Link to="/shop" className="btn btn-outline btn-lg" style={{ marginTop: 'var(--space-8)' }}>
               Explore Collection
-            </a>
+            </Link>
           </div>
         </section>
       </main>
