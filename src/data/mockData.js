@@ -183,6 +183,9 @@ export const testimonials = [
   },
 ];
 
+// Dev-only fallback login, used solely when no Supabase backend is configured
+// (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY unset). Never consulted once a
+// real backend is live — see adminLogin in AppContext.jsx.
 export const adminCredentials = {
   username: 'admin',
   password: 'decreatives2024',

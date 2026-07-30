@@ -72,15 +72,9 @@ export function AppProvider({ children }) {
   const adminLogin = useCallback(async (usernameOrEmail, password) => {
     setLoginError('');
 
-    // 1. Try local credentials first (username/password shortcut)
-    if (usernameOrEmail === adminCredentials.username && password === adminCredentials.password) {
-      setIsAdminLoggedIn(true);
-      setAuthLoading(false);
-      showToast('Welcome back, Admin!', 'success');
-      return true;
-    }
-
-    // 2. Try Supabase email auth for any other email-based accounts
+    // With a real backend configured, Supabase auth is the only path: writes
+    // are RLS-gated on an authenticated Supabase session, so a local-only
+    // credential check would "log in" an admin whose every write then fails.
     if (supabase) {
       try {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -97,8 +91,19 @@ export function AppProvider({ children }) {
         }
       } catch (err) {
         console.error('Auth error:', err.message);
-        // Fall through to generic error below
       }
+
+      setLoginError('Invalid credentials. Please try again.');
+      return false;
+    }
+
+    // No backend configured (local/dev mock-data mode) - fall back to the
+    // hardcoded demo credentials so the admin UI is still reachable.
+    if (usernameOrEmail === adminCredentials.username && password === adminCredentials.password) {
+      setIsAdminLoggedIn(true);
+      setAuthLoading(false);
+      showToast('Welcome back, Admin!', 'success');
+      return true;
     }
 
     setLoginError('Invalid credentials. Please try again.');
