@@ -62,10 +62,10 @@ export default function AdminProducts() {
     setForm({
       ...emptyForm,
       ...product,
-      price: product.price.toString(),
+      price: (product.price || 0).toString(),
       comparePrice: product.comparePrice?.toString() || '',
-      stock: product.stock.toString(),
-      sizes: product.sizes.join(', '),
+      stock: (product.stock || 0).toString(),
+      sizes: (product.sizes || []).join(', '),
     });
     setEditId(product.id);
     setShowForm(true);
@@ -220,7 +220,7 @@ export default function AdminProducts() {
                 <tr key={p.id}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <img src={p.images[0]} alt={p.name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} loading="lazy" />
+                      <img src={(p.images && p.images[0]) || '/logo.png'} alt={p.name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} loading="lazy" />
                       <div>
                         <p style={{ fontFamily: 'var(--font-accent)', fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.875rem' }}>{p.name}</p>
                         <p style={{ fontFamily: 'var(--font-accent)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>{p.sku}</p>

@@ -110,7 +110,7 @@ export default function AdminInventory() {
                   <tr key={p.id}>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <img src={p.images[0]} alt={p.name} style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '8px', background: 'var(--bg-elevated)', flexShrink: 0 }} loading="lazy" />
+                        <img src={(p.images && p.images[0]) || '/logo.png'} alt={p.name} style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '8px', background: 'var(--bg-elevated)', flexShrink: 0 }} loading="lazy" />
                         <span style={{ fontFamily: 'var(--font-accent)', fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.875rem' }}>{p.name}</span>
                       </div>
                     </td>

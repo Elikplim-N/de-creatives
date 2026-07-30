@@ -6,7 +6,7 @@ import Footer from '../components/storefront/Footer';
 import './ProductDetail.css';
 
 export default function ProductDetail() {
-  const { id } = useParams();
+  const id = useParams().id;
   const { products, addToCart, toggleWishlist, isInWishlist } = useApp();
   const product = products.find(p => p.id === id);
 
@@ -31,6 +31,12 @@ export default function ProductDetail() {
     );
   }
 
+  // Defensive fallbacks for Supabase arrays
+  const images = product.images || [];
+  const colors = product.colors || [];
+  const colorNames = product.colorNames || [];
+  const sizes = product.sizes || [];
+
   const wishlisted = isInWishlist(product.id);
   const discount = product.comparePrice
     ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
@@ -42,7 +48,7 @@ export default function ProductDetail() {
       setTimeout(() => setSizeError(false), 2000);
       return;
     }
-    addToCart(product, selectedSize, product.colors[selectedColor]);
+    addToCart(product, selectedSize, colors[selectedColor] || '#0A0A0A');
   };
 
   return (
@@ -63,7 +69,7 @@ export default function ProductDetail() {
             {/* Gallery */}
             <div className="product-detail__gallery">
               <div className="product-detail__thumbnails">
-                {product.images.map((img, i) => (
+                {images.map((img, i) => (
                   <button
                     key={i}
                     className={`product-detail__thumb${activeImage === i ? ' product-detail__thumb--active' : ''}`}
@@ -76,7 +82,7 @@ export default function ProductDetail() {
               </div>
               <div className="product-detail__main-image">
                 <img
-                  src={product.images[activeImage]}
+                  src={images[activeImage] || '/logo.png'}
                   alt={product.name}
                   key={activeImage}
                   className="product-detail__img"
@@ -97,13 +103,13 @@ export default function ProductDetail() {
               <h1 className="product-detail__name">{product.name}</h1>
 
               <div className="product-detail__rating">
-                <span className="product-detail__stars">{'★'.repeat(Math.round(product.rating))}</span>
-                <span className="product-detail__rating-val">{product.rating.toFixed(1)}</span>
-                <span className="product-detail__review-count">({product.reviewCount} reviews)</span>
+                <span className="product-detail__stars">{'★'.repeat(Math.round(product.rating || 5))}</span>
+                <span className="product-detail__rating-val">{(product.rating || 5.0).toFixed(1)}</span>
+                <span className="product-detail__review-count">({product.reviewCount || 0} reviews)</span>
               </div>
 
               <div className="product-detail__price-row">
-                <span className="product-detail__price">${product.price.toFixed(2)}</span>
+                <span className="product-detail__price">${(product.price || 0).toFixed(2)}</span>
                 {product.comparePrice && (
                   <>
                     <span className="product-detail__compare">${product.comparePrice.toFixed(2)}</span>
@@ -118,17 +124,17 @@ export default function ProductDetail() {
               <div className="product-detail__section">
                 <div className="product-detail__section-header">
                   <span className="product-detail__section-label">Color</span>
-                  <span className="product-detail__section-val">{product.colorNames[selectedColor]}</span>
+                  <span className="product-detail__section-val">{colorNames[selectedColor] || 'Default'}</span>
                 </div>
                 <div className="product-detail__colors">
-                  {product.colors.map((color, i) => (
+                  {colors.map((color, i) => (
                     <button
                       key={i}
                       className={`product-detail__color-swatch${selectedColor === i ? ' product-detail__color-swatch--active' : ''}`}
                       style={{ '--swatch-color': color }}
                       onClick={() => setSelectedColor(i)}
-                      aria-label={product.colorNames[i]}
-                      title={product.colorNames[i]}
+                      aria-label={colorNames[i] || 'Color'}
+                      title={colorNames[i] || 'Color'}
                     />
                   ))}
                 </div>
@@ -141,7 +147,7 @@ export default function ProductDetail() {
                   <button onClick={() => setActiveTab('sizing')} className="product-detail__size-guide">Size Guide →</button>
                 </div>
                 <div className={`product-detail__sizes${sizeError ? ' product-detail__sizes--error' : ''}`}>
-                  {product.sizes.map(size => (
+                  {sizes.map(size => (
                     <button
                       key={size}
                       className={`product-detail__size-btn${selectedSize === size ? ' product-detail__size-btn--active' : ''}`}

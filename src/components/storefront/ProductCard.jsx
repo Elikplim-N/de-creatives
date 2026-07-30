@@ -9,10 +9,16 @@ export default function ProductCard({ product }) {
     ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
     : null;
 
+  // Defensive fallbacks for Supabase PostgreSQL array columns
+  const images = product.images || [];
+  const colors = product.colors || [];
+  const colorNames = product.colorNames || [];
+  const sizes = product.sizes || [];
+
   const handleQuickAdd = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product, product.sizes[0], product.colors[0]);
+    addToCart(product, sizes[0] || 'M', colors[0] || '#0A0A0A');
   };
 
   const handleWishlist = (e) => {
@@ -25,14 +31,14 @@ export default function ProductCard({ product }) {
     <article className="product-card">
       <Link to={`/product/${product.id}`} className="product-card__image-wrap" aria-label={`View ${product.name}`}>
         <img
-          src={product.images[0]}
+          src={images[0] || '/logo.png'}
           alt={product.name}
           className="product-card__image product-card__image--front"
           loading="lazy"
         />
-        {product.images[1] && (
+        {images[1] && (
           <img
-            src={product.images[1]}
+            src={images[1]}
             alt={`${product.name} alternate view`}
             className="product-card__image product-card__image--back"
             loading="lazy"
@@ -72,8 +78,8 @@ export default function ProductCard({ product }) {
         <div className="product-card__meta">
           <span className="product-card__category">{product.categoryName}</span>
           <div className="product-card__rating">
-            <span className="product-card__stars">{'★'.repeat(Math.round(product.rating))}</span>
-            <span className="product-card__review-count">({product.reviewCount})</span>
+            <span className="product-card__stars">{'★'.repeat(Math.round(product.rating || 5))}</span>
+            <span className="product-card__review-count">({product.reviewCount || 0})</span>
           </div>
         </div>
 
@@ -84,7 +90,7 @@ export default function ProductCard({ product }) {
         <div className="product-card__bottom">
           <div className="product-card__price-wrap">
             <span className="product-card__price">
-              ${product.price.toFixed(2)}
+              ${(product.price || 0).toFixed(2)}
             </span>
             {product.comparePrice && (
               <span className="product-card__compare">
@@ -95,18 +101,18 @@ export default function ProductCard({ product }) {
 
           {/* Color swatches */}
           <div className="product-card__colors">
-            {product.colors.slice(0, 4).map((color, i) => (
+            {colors.slice(0, 4).map((color, i) => (
               <span
                 key={i}
                 className="product-card__swatch"
                 style={{ background: color }}
-                title={product.colorNames[i]}
+                title={colorNames[i] || 'Color'}
                 role="img"
-                aria-label={product.colorNames[i]}
+                aria-label={colorNames[i] || 'Color'}
               />
             ))}
-            {product.colors.length > 4 && (
-              <span className="product-card__swatch-more">+{product.colors.length - 4}</span>
+            {colors.length > 4 && (
+              <span className="product-card__swatch-more">+{colors.length - 4}</span>
             )}
           </div>
         </div>

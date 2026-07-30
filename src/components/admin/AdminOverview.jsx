@@ -83,7 +83,7 @@ export default function AdminOverview() {
                 <tr key={p.id}>
                   <td>
                     <div className="admin-overview__product-cell">
-                      <img src={p.images[0]} alt={p.name} className="admin-overview__product-thumb" loading="lazy" />
+                      <img src={(p.images && p.images[0]) || '/logo.png'} alt={p.name} className="admin-overview__product-thumb" loading="lazy" />
                       <div>
                         <p className="admin-overview__product-name">{p.name}</p>
                         <p className="admin-overview__product-sku">{p.sku}</p>
