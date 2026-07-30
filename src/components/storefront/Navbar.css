@@ -32,21 +32,22 @@
 /* Logo */
 .navbar__logo {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-3);
+  gap: 2px;
   text-decoration: none;
   justify-self: center;
 }
 .navbar__logo-img {
-  height: 80px;
+  height: 48px;
   width: auto;
   object-fit: contain;
   filter: brightness(1);
   transition: filter var(--transition-fast);
 }
 .navbar__logo-text-img {
-  height: 62px;
+  height: 24px;
   width: auto;
   object-fit: contain;
   filter: brightness(1);
@@ -233,11 +234,11 @@
   .navbar__inner { padding: 0 var(--space-4); }
   .navbar__links { display: none; }
   .navbar__hamburger { display: flex; }
-  .navbar__logo-img { height: 56px; }
-  .navbar__logo-text-img { height: 44px; }
+  .navbar__logo-img { height: 38px; }
+  .navbar__logo-text-img { height: 18px; }
   .navbar__admin-link { display: none; }
 }
 @media (max-width: 480px) {
-  .navbar__logo-img { height: 48px; }
-  .navbar__logo-text-img { height: 38px; }
+  .navbar__logo-img { height: 34px; }
+  .navbar__logo-text-img { height: 16px; }
 }
