@@ -66,10 +66,18 @@ export function AppProvider({ children }) {
   }, [showToast]);
 
   const adminLogin = useCallback(async (usernameOrEmail, password) => {
+    setLoginError('');
+
+    // 1. Try local credentials first (username/password shortcut)
+    if (usernameOrEmail === adminCredentials.username && password === adminCredentials.password) {
+      setIsAdminLoggedIn(true);
+      showToast('Welcome back, Admin!', 'success');
+      return true;
+    }
+
+    // 2. Try Supabase email auth for any other email-based accounts
     if (supabase) {
       try {
-        setLoginError('');
-        // Standard email auth
         const { data, error } = await supabase.auth.signInWithPassword({
           email: usernameOrEmail,
           password: password,
@@ -84,19 +92,12 @@ export function AppProvider({ children }) {
         }
       } catch (err) {
         console.error('Auth error:', err.message);
-        setLoginError(err.message || 'Invalid email or password.');
-        return false;
+        // Fall through to generic error below
       }
-    } else {
-      // Mock mode fallback
-      if (usernameOrEmail === adminCredentials.username && password === adminCredentials.password) {
-        setIsAdminLoggedIn(true);
-        setLoginError('');
-        return true;
-      }
-      setLoginError('Invalid credentials. Please try again.');
-      return false;
     }
+
+    setLoginError('Invalid credentials. Please try again.');
+    return false;
   }, [showToast]);
 
   const adminLogout = useCallback(async () => {
