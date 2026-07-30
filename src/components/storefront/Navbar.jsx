@@ -52,8 +52,8 @@ export default function Navbar() {
 
         {/* Center: Both Logos */}
         <Link to="/" className="navbar__logo" aria-label="DE Creatives Home">
-          <img src="/favicon_nav.png" alt="DE Logo" className="navbar__logo-img" />
           <img src="/logo.png" alt="DE Creatives Logo" className="navbar__logo-text-img" />
+          <img src="/favicon_nav.png" alt="DE Logo" className="navbar__logo-img" />
         </Link>
 
         {/* Right: Actions */}
