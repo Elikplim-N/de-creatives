@@ -1,14 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { supabase } from '../lib/supabaseClient';
 import './AdminLogin.css';
 
 export default function AdminLogin() {
-  const { adminLogin, loginError } = useApp();
+  const { adminLogin, loginError, isAdminLoggedIn, authLoading } = useApp();
   const navigate = useNavigate();
   const [form, setForm] = useState({ username: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && isAdminLoggedIn) navigate('/admin', { replace: true });
+  }, [authLoading, isAdminLoggedIn, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,14 +58,16 @@ export default function AdminLogin() {
             <p className="admin-login__subtitle">Secure access to DE Creatives management</p>
           </div>
 
-          {/* Demo Hint */}
-          <div className="admin-login__demo-hint" role="note">
-            <span className="admin-login__demo-icon">💡</span>
-            <div>
-              <strong>Production / Demo Login</strong>
-              <p>Email/Username: <code>admin</code> (or your Supabase Auth email) · Password: <code>decreatives2024</code></p>
+          {/* Demo Hint - only relevant when no backend is configured */}
+          {!supabase && (
+            <div className="admin-login__demo-hint" role="note">
+              <span className="admin-login__demo-icon">💡</span>
+              <div>
+                <strong>Demo Login</strong>
+                <p>Email/Username: <code>admin</code> · Password: <code>decreatives2024</code></p>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Form */}
           <form className="admin-login__form" onSubmit={handleSubmit} noValidate>

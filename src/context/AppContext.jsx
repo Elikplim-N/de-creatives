@@ -6,6 +6,7 @@ const AppContext = createContext(null);
 
 export function AppProvider({ children }) {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [authLoading, setAuthLoading] = useState(!!supabase);
   const [loginError, setLoginError] = useState('');
   const [products, setProducts] = useState(initialProducts);
   const [categories, setCategories] = useState(initialCategories);
@@ -55,9 +56,12 @@ export function AppProvider({ children }) {
 
     loadData();
 
-    // Listen for auth state changes to keep dashboard synced
+    // Listen for auth state changes to keep dashboard synced.
+    // The first callback fires with the restored session (or null) before
+    // any user interaction, so it also tells us when the initial check is done.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAdminLoggedIn(!!session);
+      setAuthLoading(false);
     });
 
     return () => {
@@ -68,14 +72,9 @@ export function AppProvider({ children }) {
   const adminLogin = useCallback(async (usernameOrEmail, password) => {
     setLoginError('');
 
-    // 1. Try local credentials first (username/password shortcut)
-    if (usernameOrEmail === adminCredentials.username && password === adminCredentials.password) {
-      setIsAdminLoggedIn(true);
-      showToast('Welcome back, Admin!', 'success');
-      return true;
-    }
-
-    // 2. Try Supabase email auth for any other email-based accounts
+    // With a real backend configured, Supabase auth is the only path: writes
+    // are RLS-gated on an authenticated Supabase session, so a local-only
+    // credential check would "log in" an admin whose every write then fails.
     if (supabase) {
       try {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -92,8 +91,19 @@ export function AppProvider({ children }) {
         }
       } catch (err) {
         console.error('Auth error:', err.message);
-        // Fall through to generic error below
       }
+
+      setLoginError('Invalid credentials. Please try again.');
+      return false;
+    }
+
+    // No backend configured (local/dev mock-data mode) - fall back to the
+    // hardcoded demo credentials so the admin UI is still reachable.
+    if (usernameOrEmail === adminCredentials.username && password === adminCredentials.password) {
+      setIsAdminLoggedIn(true);
+      setAuthLoading(false);
+      showToast('Welcome back, Admin!', 'success');
+      return true;
     }
 
     setLoginError('Invalid credentials. Please try again.');
@@ -347,7 +357,7 @@ export function AppProvider({ children }) {
 
   return (
     <AppContext.Provider value={{
-      isAdminLoggedIn, loginError, adminLogin, adminLogout,
+      isAdminLoggedIn, authLoading, loginError, adminLogin, adminLogout,
       products, categories, cart, cartCount, wishlist, toast,
       activeCategory, setActiveCategory,
       searchQuery, setSearchQuery,
