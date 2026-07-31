@@ -5,7 +5,7 @@ import './AdminInventory.css';
 
 const emptyForm = {
   name: '', sku: '', price: '', comparePrice: '',
-  category: 'cat-1', categoryName: 'Streetwear',
+  category: '', categoryName: '',
   description: '', sizes: 'S, M, L, XL', stock: '',
   isNew: true, isFeatured: false, isBestseller: false,
   imagePreview: null,
@@ -13,6 +13,9 @@ const emptyForm = {
 
 export default function AdminProducts() {
   const { products, categories, addProduct, deleteProduct, updateProduct } = useApp();
+  // Category is optional - products can be added as Uncategorized and sorted
+  // into categories later, so the form must never default to (or require) an
+  // id that doesn't actually exist in the database.
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -46,7 +49,7 @@ export default function AdminProducts() {
       comparePrice: form.comparePrice ? parseFloat(form.comparePrice) : null,
       stock: parseInt(form.stock) || 0,
       sizes: form.sizes.split(',').map(s => s.trim()).filter(Boolean),
-      categoryName: cat?.name || 'Streetwear',
+      categoryName: cat?.name || 'Uncategorized',
     };
     if (editId) {
       updateProduct(editId, payload);
@@ -136,6 +139,7 @@ export default function AdminProducts() {
               <div className="form-group">
                 <label htmlFor="prod-cat" className="form-label">Category</label>
                 <select id="prod-cat" name="category" className="form-input" value={form.category} onChange={handleChange}>
+                  <option value="">Uncategorized</option>
                   {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                 </select>
               </div>
