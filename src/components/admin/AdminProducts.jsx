@@ -5,7 +5,7 @@ import './AdminInventory.css';
 
 const emptyForm = {
   name: '', sku: '', price: '', comparePrice: '',
-  category: 'cat-1', categoryName: 'Streetwear',
+  category: '', categoryName: '',
   description: '', sizes: 'S, M, L, XL', stock: '',
   isNew: true, isFeatured: false, isBestseller: false,
   imagePreview: null,
@@ -13,7 +13,15 @@ const emptyForm = {
 
 export default function AdminProducts() {
   const { products, categories, addProduct, deleteProduct, updateProduct } = useApp();
-  const [form, setForm] = useState(emptyForm);
+  // The category dropdown must default to a category that actually exists in
+  // the database - a hardcoded id (e.g. 'cat-1') breaks with a foreign key
+  // violation the moment that category is renamed, deleted, or never seeded.
+  const freshForm = () => ({
+    ...emptyForm,
+    category: categories[0]?.id || '',
+    categoryName: categories[0]?.name || '',
+  });
+  const [form, setForm] = useState(freshForm);
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
@@ -38,7 +46,7 @@ export default function AdminProducts() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.name || !form.price) return;
+    if (!form.name || !form.price || !form.category) return;
     const cat = categories.find(c => c.id === form.category);
     const payload = {
       ...form,
@@ -46,7 +54,7 @@ export default function AdminProducts() {
       comparePrice: form.comparePrice ? parseFloat(form.comparePrice) : null,
       stock: parseInt(form.stock) || 0,
       sizes: form.sizes.split(',').map(s => s.trim()).filter(Boolean),
-      categoryName: cat?.name || 'Streetwear',
+      categoryName: cat?.name || '',
     };
     if (editId) {
       updateProduct(editId, payload);
@@ -54,7 +62,7 @@ export default function AdminProducts() {
     } else {
       addProduct(payload);
     }
-    setForm(emptyForm);
+    setForm(freshForm());
     setShowForm(false);
   };
 
@@ -79,7 +87,7 @@ export default function AdminProducts() {
           <h1 className="admin-page-title">Product Management</h1>
           <p className="admin-page-subtitle">{products.length} products in catalog</p>
         </div>
-        <button className="btn btn-primary" onClick={() => { setShowForm(v => !v); setEditId(null); setForm(emptyForm); }}>
+        <button className="btn btn-primary" onClick={() => { setShowForm(v => !v); setEditId(null); setForm(freshForm()); }}>
           {showForm ? 'Cancel' : (
             <>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -98,6 +106,11 @@ export default function AdminProducts() {
             <h2 className="admin-section-title">{editId ? 'Edit Product' : 'Add New Product'}</h2>
             {editId && <span className="badge badge-turquoise">Editing</span>}
           </div>
+          {categories.length === 0 ? (
+            <p style={{ color: 'var(--warning)', fontFamily: 'var(--font-accent)', padding: '16px 0' }}>
+              You need at least one category before adding products. Head to the Categories tab and create one first.
+            </p>
+          ) : (
           <form className="admin-add-form" onSubmit={handleSubmit} noValidate>
             <div className="admin-add-form__grid">
               {/* Image Upload */}
@@ -177,11 +190,12 @@ export default function AdminProducts() {
               <button type="submit" className="btn btn-primary">
                 {editId ? 'Save Changes' : 'Add Product'}
               </button>
-              <button type="button" className="btn btn-outline" onClick={() => { setShowForm(false); setEditId(null); setForm(emptyForm); }}>
+              <button type="button" className="btn btn-outline" onClick={() => { setShowForm(false); setEditId(null); setForm(freshForm()); }}>
                 Cancel
               </button>
             </div>
           </form>
+          )}
         </div>
       )}
 
