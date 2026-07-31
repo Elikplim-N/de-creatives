@@ -20,8 +20,9 @@ function formatDbProduct(p, categoryList) {
   };
 }
 
-// Inverse of formatDbProduct - maps an admin-form update (camelCase, plus
-// UI-only fields like categoryName/imagePreview) to real de_products columns.
+// Inverse of formatDbProduct - maps an admin-form update (camelCase, plus the
+// UI-only categoryName field) to real de_products columns. `images` is
+// already a plain array of Storage URLs by the time it gets here.
 const PRODUCT_FIELD_TO_COLUMN = {
   category: 'category_id',
   comparePrice: 'compare_price',
@@ -29,7 +30,7 @@ const PRODUCT_FIELD_TO_COLUMN = {
   isFeatured: 'is_featured',
   isBestseller: 'is_bestseller',
 };
-const PRODUCT_UI_ONLY_FIELDS = new Set(['categoryName', 'imagePreview']);
+const PRODUCT_UI_ONLY_FIELDS = new Set(['categoryName']);
 
 function toDbProductUpdates(updates) {
   const dbUpdates = {};
@@ -38,7 +39,6 @@ function toDbProductUpdates(updates) {
     dbUpdates[PRODUCT_FIELD_TO_COLUMN[key] || key] = value;
   }
   if ('category' in updates) dbUpdates.category_id = updates.category || null;
-  if (updates.imagePreview) dbUpdates.images = [updates.imagePreview];
   return dbUpdates;
 }
 
@@ -212,6 +212,34 @@ export function AppProvider({ children }) {
     }
   }, [showToast]);
 
+  const DEFAULT_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80';
+
+  // Uploads real files to Supabase Storage and returns their public URLs, in
+  // the same order given - order matters, since images[0] is the cover shown
+  // on product cards and the storefront grid. Falls back to local data URLs
+  // in mock mode, where there's no backend to actually store files in.
+  const uploadProductImages = useCallback(async (files) => {
+    if (!files || files.length === 0) return [];
+    if (!supabase) {
+      return Promise.all(files.map(file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      })));
+    }
+    const urls = [];
+    for (const file of files) {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('product-images').upload(path, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from('product-images').getPublicUrl(path);
+      urls.push(data.publicUrl);
+    }
+    return urls;
+  }, []);
+
   const addProduct = useCallback(async (product) => {
     if (supabase) {
       try {
@@ -231,7 +259,7 @@ export function AppProvider({ children }) {
           colors: ['#0A0A0A'],
           color_names: ['Default Jet Black'],
           sizes: ['S', 'M', 'L', 'XL'],
-          images: product.imagePreview ? [product.imagePreview] : ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80'],
+          images: product.images?.length > 0 ? product.images : [DEFAULT_PRODUCT_IMAGE],
           rating: 5.0,
           review_count: 0
         };
@@ -255,7 +283,7 @@ export function AppProvider({ children }) {
         sku: product.sku || `DE-${Date.now()}`,
         rating: 0, reviewCount: 0,
         isNew: true, isFeatured: false, isBestseller: false,
-        images: product.imagePreview ? [product.imagePreview] : ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80'],
+        images: product.images?.length > 0 ? product.images : [DEFAULT_PRODUCT_IMAGE],
         colors: ['#1A1A1A'], colorNames: ['Default'],
       };
       setProducts(prev => [newProduct, ...prev]);
@@ -276,9 +304,6 @@ export function AppProvider({ children }) {
             const merged = { ...p, ...updates };
             if ('category' in updates) {
               merged.categoryName = categories.find(c => c.id === updates.category)?.name || 'Uncategorized';
-            }
-            if (updates.imagePreview) {
-              merged.images = [updates.imagePreview];
             }
             return merged;
           }
@@ -502,7 +527,7 @@ export function AppProvider({ children }) {
       activeCategory, setActiveCategory,
       searchQuery, setSearchQuery,
       filteredProducts, showToast,
-      addProduct, updateProduct, deleteProduct,
+      addProduct, updateProduct, deleteProduct, uploadProductImages,
       addCategory, deleteCategory,
       addToCart, toggleWishlist, isInWishlist,
       removeFromCart, updateCartQty, clearCart,
