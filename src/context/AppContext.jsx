@@ -4,12 +4,50 @@ import { supabase } from '../lib/supabaseClient';
 
 const AppContext = createContext(null);
 
+// Bridges de_products' snake_case DB columns to the camelCase fields the
+// storefront and admin UI read (reviewCount, isNew, isFeatured, isBestseller,
+// comparePrice), plus the category name lookup both callers need.
+function formatDbProduct(p, categoryList) {
+  return {
+    ...p,
+    category: p.category_id,
+    categoryName: categoryList?.find(c => c.id === p.category_id)?.name || 'Uncategorized',
+    comparePrice: p.compare_price,
+    reviewCount: p.review_count,
+    isNew: p.is_new,
+    isFeatured: p.is_featured,
+    isBestseller: p.is_bestseller,
+  };
+}
+
+// Inverse of formatDbProduct - maps an admin-form update (camelCase, plus
+// UI-only fields like categoryName/imagePreview) to real de_products columns.
+const PRODUCT_FIELD_TO_COLUMN = {
+  category: 'category_id',
+  comparePrice: 'compare_price',
+  isNew: 'is_new',
+  isFeatured: 'is_featured',
+  isBestseller: 'is_bestseller',
+};
+const PRODUCT_UI_ONLY_FIELDS = new Set(['categoryName', 'imagePreview']);
+
+function toDbProductUpdates(updates) {
+  const dbUpdates = {};
+  for (const [key, value] of Object.entries(updates)) {
+    if (PRODUCT_UI_ONLY_FIELDS.has(key)) continue;
+    dbUpdates[PRODUCT_FIELD_TO_COLUMN[key] || key] = value;
+  }
+  if (updates.imagePreview) dbUpdates.images = [updates.imagePreview];
+  return dbUpdates;
+}
+
 export function AppProvider({ children }) {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [authLoading, setAuthLoading] = useState(!!supabase);
   const [loginError, setLoginError] = useState('');
   const [products, setProducts] = useState(initialProducts);
   const [categories, setCategories] = useState(initialCategories);
+  const [orders, setOrders] = useState([]);
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [toast, setToast] = useState(null);
@@ -40,13 +78,7 @@ export function AppProvider({ children }) {
           .select('*');
         if (prodError) throw prodError;
         if (prodData) {
-          // Format category pointers for frontend compatibility
-          const formattedProducts = prodData.map(p => ({
-            ...p,
-            category: p.category_id,
-            categoryName: catData?.find(c => c.id === p.category_id)?.name || 'Uncategorized'
-          }));
-          setProducts(formattedProducts);
+          setProducts(prodData.map(p => formatDbProduct(p, catData)));
         }
       } catch (err) {
         console.error('Error fetching data from Supabase:', err.message);
@@ -68,6 +100,26 @@ export function AppProvider({ children }) {
       subscription.unsubscribe();
     };
   }, [showToast]);
+
+  // Orders are RLS-gated to authenticated users, so they can only be fetched
+  // once an admin session exists - refetch whenever login state flips on.
+  useEffect(() => {
+    if (!supabase || !isAdminLoggedIn) return;
+
+    const loadOrders = async () => {
+      const { data, error } = await supabase
+        .from('de_orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Error fetching orders from Supabase:', error.message);
+        return;
+      }
+      if (data) setOrders(data);
+    };
+
+    loadOrders();
+  }, [isAdminLoggedIn]);
 
   const adminLogin = useCallback(async (usernameOrEmail, password) => {
     setLoginError('');
@@ -152,11 +204,7 @@ export function AppProvider({ children }) {
         if (error) throw error;
 
         // update local state
-        setProducts(prev => [{
-          ...newProductDb,
-          category: newProductDb.category_id,
-          categoryName: categories.find(c => c.id === newProductDb.category_id)?.name || 'Uncategorized'
-        }, ...prev]);
+        setProducts(prev => [formatDbProduct(newProductDb, categories), ...prev]);
 
         showToast(`"${product.name}" added to Supabase!`, 'success');
       } catch (err) {
@@ -182,11 +230,7 @@ export function AppProvider({ children }) {
   const updateProduct = useCallback(async (id, updates) => {
     if (supabase) {
       try {
-        const dbUpdates = { ...updates };
-        if (updates.category) {
-          dbUpdates.category_id = updates.category;
-          delete dbUpdates.category;
-        }
+        const dbUpdates = toDbProductUpdates(updates);
 
         const { error } = await supabase.from('de_products').update(dbUpdates).eq('id', id);
         if (error) throw error;
@@ -196,6 +240,9 @@ export function AppProvider({ children }) {
             const merged = { ...p, ...updates };
             if (updates.category) {
               merged.categoryName = categories.find(c => c.id === updates.category)?.name || 'Uncategorized';
+            }
+            if (updates.imagePreview) {
+              merged.images = [updates.imagePreview];
             }
             return merged;
           }
@@ -358,7 +405,7 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider value={{
       isAdminLoggedIn, authLoading, loginError, adminLogin, adminLogout,
-      products, categories, cart, cartCount, wishlist, toast,
+      products, categories, orders, cart, cartCount, wishlist, toast,
       activeCategory, setActiveCategory,
       searchQuery, setSearchQuery,
       filteredProducts, showToast,

@@ -54,9 +54,11 @@ export default function CartDrawer() {
     setLoading(true);
     const orderId = `ord-${Date.now().toString().slice(-6)}`;
     try {
-      // Prepare order structure
+      // Prepare order structure. `id` is left for Postgres to generate
+      // (uuid primary key) - order_number is the human-readable reference
+      // shown to the customer and sent over WhatsApp.
       const orderData = {
-        id: orderId,
+        order_number: orderId,
         customer_email: formData.email,
         customer_name: formData.fullName,
         shipping_address: `${formData.address}, ${formData.city}`,
@@ -80,7 +82,7 @@ export default function CartDrawer() {
         if (error) throw error;
       }
 
-      setPlacedOrder(orderData);
+      setPlacedOrder({ ...orderData, id: orderId });
       setCheckoutStep('success');
       clearCart();
       showToast('Order placed successfully!', 'success');
