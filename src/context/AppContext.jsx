@@ -37,6 +37,7 @@ function toDbProductUpdates(updates) {
     if (PRODUCT_UI_ONLY_FIELDS.has(key)) continue;
     dbUpdates[PRODUCT_FIELD_TO_COLUMN[key] || key] = value;
   }
+  if ('category' in updates) dbUpdates.category_id = updates.category || null;
   if (updates.imagePreview) dbUpdates.images = [updates.imagePreview];
   return dbUpdates;
 }
@@ -184,7 +185,7 @@ export function AppProvider({ children }) {
           id,
           sku: product.sku || `DC-${Date.now()}`,
           name: product.name,
-          category_id: product.category,
+          category_id: product.category || null,
           price: parseFloat(product.price),
           compare_price: product.comparePrice ? parseFloat(product.comparePrice) : null,
           description: product.description,
@@ -238,7 +239,7 @@ export function AppProvider({ children }) {
         setProducts(prev => prev.map(p => {
           if (p.id === id) {
             const merged = { ...p, ...updates };
-            if (updates.category) {
+            if ('category' in updates) {
               merged.categoryName = categories.find(c => c.id === updates.category)?.name || 'Uncategorized';
             }
             if (updates.imagePreview) {

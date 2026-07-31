@@ -13,15 +13,10 @@ const emptyForm = {
 
 export default function AdminProducts() {
   const { products, categories, addProduct, deleteProduct, updateProduct } = useApp();
-  // The category dropdown must default to a category that actually exists in
-  // the database - a hardcoded id (e.g. 'cat-1') breaks with a foreign key
-  // violation the moment that category is renamed, deleted, or never seeded.
-  const freshForm = () => ({
-    ...emptyForm,
-    category: categories[0]?.id || '',
-    categoryName: categories[0]?.name || '',
-  });
-  const [form, setForm] = useState(freshForm);
+  // Category is optional - products can be added as Uncategorized and sorted
+  // into categories later, so the form must never default to (or require) an
+  // id that doesn't actually exist in the database.
+  const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
@@ -46,7 +41,7 @@ export default function AdminProducts() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.name || !form.price || !form.category) return;
+    if (!form.name || !form.price) return;
     const cat = categories.find(c => c.id === form.category);
     const payload = {
       ...form,
@@ -54,7 +49,7 @@ export default function AdminProducts() {
       comparePrice: form.comparePrice ? parseFloat(form.comparePrice) : null,
       stock: parseInt(form.stock) || 0,
       sizes: form.sizes.split(',').map(s => s.trim()).filter(Boolean),
-      categoryName: cat?.name || '',
+      categoryName: cat?.name || 'Uncategorized',
     };
     if (editId) {
       updateProduct(editId, payload);
@@ -62,7 +57,7 @@ export default function AdminProducts() {
     } else {
       addProduct(payload);
     }
-    setForm(freshForm());
+    setForm(emptyForm);
     setShowForm(false);
   };
 
@@ -87,7 +82,7 @@ export default function AdminProducts() {
           <h1 className="admin-page-title">Product Management</h1>
           <p className="admin-page-subtitle">{products.length} products in catalog</p>
         </div>
-        <button className="btn btn-primary" onClick={() => { setShowForm(v => !v); setEditId(null); setForm(freshForm()); }}>
+        <button className="btn btn-primary" onClick={() => { setShowForm(v => !v); setEditId(null); setForm(emptyForm); }}>
           {showForm ? 'Cancel' : (
             <>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -106,11 +101,6 @@ export default function AdminProducts() {
             <h2 className="admin-section-title">{editId ? 'Edit Product' : 'Add New Product'}</h2>
             {editId && <span className="badge badge-turquoise">Editing</span>}
           </div>
-          {categories.length === 0 ? (
-            <p style={{ color: 'var(--warning)', fontFamily: 'var(--font-accent)', padding: '16px 0' }}>
-              You need at least one category before adding products. Head to the Categories tab and create one first.
-            </p>
-          ) : (
           <form className="admin-add-form" onSubmit={handleSubmit} noValidate>
             <div className="admin-add-form__grid">
               {/* Image Upload */}
@@ -149,6 +139,7 @@ export default function AdminProducts() {
               <div className="form-group">
                 <label htmlFor="prod-cat" className="form-label">Category</label>
                 <select id="prod-cat" name="category" className="form-input" value={form.category} onChange={handleChange}>
+                  <option value="">Uncategorized</option>
                   {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
                 </select>
               </div>
@@ -190,12 +181,11 @@ export default function AdminProducts() {
               <button type="submit" className="btn btn-primary">
                 {editId ? 'Save Changes' : 'Add Product'}
               </button>
-              <button type="button" className="btn btn-outline" onClick={() => { setShowForm(false); setEditId(null); setForm(freshForm()); }}>
+              <button type="button" className="btn btn-outline" onClick={() => { setShowForm(false); setEditId(null); setForm(emptyForm); }}>
                 Cancel
               </button>
             </div>
           </form>
-          )}
         </div>
       )}
 
