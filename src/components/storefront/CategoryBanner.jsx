@@ -2,14 +2,8 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import './CategoryBanner.css';
 
-// Using real DE Creatives product/model photos for the editorial showcase
-const catImages = {
-  'cat-1': '/products/tee-black-girl-palm.jpg',      // Streetwear
-  'cat-2': '/products/tee-white-back.jpg',            // Essentials
-  'cat-3': '/products/tee-black-girl-garden.jpg',     // Limited Edition
-  'cat-4': '/products/tee-black-duo-girls.jpg',       // Accessories (placeholder or model duo)
-};
-
+// Categories manage their own cover image in Admin > Categories; this is
+// only shown for a category that hasn't had one set yet.
 const FALLBACK_IMAGE = '/products/tee-black-girl-tree.jpg';
 
 export default function CategoryBanner() {
@@ -34,7 +28,7 @@ export default function CategoryBanner() {
               onClick={() => handleCategoryClick(cat.id)}
               aria-label={`Browse ${cat.name}`}
             >
-              <img src={catImages[cat.id] || FALLBACK_IMAGE} alt={cat.name} loading="lazy" />
+              <img src={cat.image || FALLBACK_IMAGE} alt={cat.name} loading="lazy" />
               <div className="cat-banner__overlay" />
               <div className="cat-banner__content">
                 <span className="cat-banner__count">{products.filter(p => p.category === cat.id).length} Items</span>

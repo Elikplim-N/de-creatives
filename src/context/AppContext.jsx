@@ -347,7 +347,8 @@ export function AppProvider({ children }) {
           id,
           name: category.name,
           slug: category.slug || category.name.toLowerCase().replace(/\s+/g, '-'),
-          description: category.description
+          description: category.description,
+          image: category.image || null,
         };
 
         const { error } = await supabase.from('de_categories').insert([newCat]);
@@ -367,6 +368,24 @@ export function AppProvider({ children }) {
       };
       setCategories(prev => [...prev, newCat]);
       showToast(`Category "${category.name}" added!`, 'success');
+    }
+  }, [showToast]);
+
+  const updateCategory = useCallback(async (id, updates) => {
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('de_categories').update(updates).eq('id', id);
+        if (error) throw error;
+
+        setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+        showToast('Category updated!', 'success');
+      } catch (err) {
+        console.error('Error updating category:', err.message);
+        showToast(`Failed to update category: ${err.message}`, 'danger');
+      }
+    } else {
+      setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+      showToast('Category updated!', 'success');
     }
   }, [showToast]);
 
@@ -528,7 +547,7 @@ export function AppProvider({ children }) {
       searchQuery, setSearchQuery,
       filteredProducts, showToast,
       addProduct, updateProduct, deleteProduct, uploadProductImages,
-      addCategory, deleteCategory,
+      addCategory, updateCategory, deleteCategory,
       addToCart, toggleWishlist, isInWishlist,
       removeFromCart, updateCartQty, clearCart,
       currency, setCurrency, currencies, formatPrice,
