@@ -190,10 +190,3 @@ export const adminCredentials = {
   username: 'admin',
   password: 'decreatives2024',
 };
-
-export const inventoryStats = {
-  totalProducts: 8,
-  totalRevenue: 128450,
-  totalOrders: 892,
-  lowStock: 1,
-};
