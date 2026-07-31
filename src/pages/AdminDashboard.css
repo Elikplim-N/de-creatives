@@ -88,6 +88,12 @@
   font-size: 0.875rem;
   font-weight: 500;
 }
+.admin-sidebar__nav-badge {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  padding: 1px 7px;
+}
 .admin-sidebar__nav-indicator {
   position: absolute;
   right: 0; top: 50%;

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { products as initialProducts, categories as initialCategories, adminCredentials } from '../data/mockData';
+import { products as initialProducts, categories as initialCategories, testimonials as initialTestimonials, adminCredentials } from '../data/mockData';
 import { supabase } from '../lib/supabaseClient';
 
 const AppContext = createContext(null);
@@ -49,6 +49,8 @@ export function AppProvider({ children }) {
   const [products, setProducts] = useState(initialProducts);
   const [categories, setCategories] = useState(initialCategories);
   const [orders, setOrders] = useState([]);
+  const [testimonials, setTestimonials] = useState(initialTestimonials);
+  const [pendingTestimonials, setPendingTestimonials] = useState([]);
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [toast, setToast] = useState(null);
@@ -81,6 +83,17 @@ export function AppProvider({ children }) {
         if (prodData) {
           setProducts(prodData.map(p => formatDbProduct(p, catData)));
         }
+
+        // Fetch approved Testimonials from de_testimonials (RLS hides
+        // pending/rejected ones from anonymous visitors already, but order
+        // + limit keep the storefront section tidy).
+        const { data: testData, error: testError } = await supabase
+          .from('de_testimonials')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(9);
+        if (testError) throw testError;
+        if (testData) setTestimonials(testData);
       } catch (err) {
         console.error('Error fetching data from Supabase:', err.message);
         showToast('Connected but failed to fetch data from Supabase. Using mock data.', 'warning');
@@ -121,6 +134,28 @@ export function AppProvider({ children }) {
 
     loadOrders();
   }, [isAdminLoggedIn]);
+
+  // Pending review moderation queue - same RLS gating as orders (the public
+  // select policy only returns is_approved = true, so unapproved rows are
+  // invisible until an admin session queries with the authenticated policy).
+  const refreshPendingTestimonials = useCallback(async () => {
+    if (!supabase) return;
+    const { data, error } = await supabase
+      .from('de_testimonials')
+      .select('*')
+      .eq('is_approved', false)
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Error fetching pending testimonials:', error.message);
+      return;
+    }
+    if (data) setPendingTestimonials(data);
+  }, []);
+
+  useEffect(() => {
+    if (!supabase || !isAdminLoggedIn) return;
+    refreshPendingTestimonials();
+  }, [isAdminLoggedIn, refreshPendingTestimonials]);
 
   const adminLogin = useCallback(async (usernameOrEmail, password) => {
     setLoginError('');
@@ -329,6 +364,61 @@ export function AppProvider({ children }) {
     }
   }, [categories, showToast]);
 
+  // Public - any visitor can submit a review. RLS forces is_approved=false
+  // on every public insert regardless of what's sent, so this can't be used
+  // to skip moderation even by a malicious direct API call.
+  const submitTestimonial = useCallback(async ({ name, location, text, rating }) => {
+    if (!supabase) {
+      showToast('Reviews require a connected backend - not available in demo mode.', 'warning');
+      return false;
+    }
+    try {
+      const { error } = await supabase.from('de_testimonials').insert([{
+        name, location: location || null, text, rating, is_approved: false,
+      }]);
+      if (error) throw error;
+      showToast('Thanks for sharing! Your review will appear once approved.', 'success');
+      return true;
+    } catch (err) {
+      console.error('Error submitting testimonial:', err.message);
+      showToast(`Failed to submit review: ${err.message}`, 'danger');
+      return false;
+    }
+  }, [showToast]);
+
+  // Admin-only moderation actions (RLS requires an authenticated session).
+  const approveTestimonial = useCallback(async (id) => {
+    if (!supabase) return;
+    try {
+      const { error } = await supabase.from('de_testimonials').update({ is_approved: true }).eq('id', id);
+      if (error) throw error;
+      setPendingTestimonials(prev => {
+        const approved = prev.find(t => t.id === id);
+        if (approved) setTestimonials(t => [{ ...approved, is_approved: true }, ...t]);
+        return prev.filter(t => t.id !== id);
+      });
+      showToast('Review approved and now live.', 'success');
+    } catch (err) {
+      console.error('Error approving testimonial:', err.message);
+      showToast(`Failed to approve review: ${err.message}`, 'danger');
+    }
+  }, [showToast]);
+
+  // Handles both rejecting a pending review and removing an already-live one.
+  const rejectTestimonial = useCallback(async (id) => {
+    if (!supabase) return;
+    try {
+      const { error } = await supabase.from('de_testimonials').delete().eq('id', id);
+      if (error) throw error;
+      setPendingTestimonials(prev => prev.filter(t => t.id !== id));
+      setTestimonials(prev => prev.filter(t => t.id !== id));
+      showToast('Review removed.', 'default');
+    } catch (err) {
+      console.error('Error removing testimonial:', err.message);
+      showToast(`Failed to remove review: ${err.message}`, 'danger');
+    }
+  }, [showToast]);
+
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
 
@@ -407,6 +497,8 @@ export function AppProvider({ children }) {
     <AppContext.Provider value={{
       isAdminLoggedIn, authLoading, loginError, adminLogin, adminLogout,
       products, categories, orders, cart, cartCount, wishlist, toast,
+      testimonials, pendingTestimonials, submitTestimonial, approveTestimonial, rejectTestimonial,
+      refreshPendingTestimonials,
       activeCategory, setActiveCategory,
       searchQuery, setSearchQuery,
       filteredProducts, showToast,

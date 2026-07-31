@@ -44,6 +44,7 @@ create table public.de_testimonials (
   text text not null,
   rating integer default 5 not null check (rating >= 1 and rating <= 5),
   avatar text,
+  is_approved boolean default false not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -96,11 +97,19 @@ create policy "Allow authenticated admin write access to products"
   with check (true);
 
 -- Testimonials Policies
-create policy "Allow public read access to testimonials"
+-- Public can only ever see approved reviews - pending/rejected ones stay
+-- invisible until an admin acts on them.
+create policy "Allow public read access to approved testimonials"
   on public.de_testimonials for select
-  using (true);
+  using (is_approved = true);
 
-create policy "Allow authenticated admin write access to testimonials"
+-- Anyone can submit a review, but cannot mark it approved themselves -
+-- new rows are always forced into the moderation queue.
+create policy "Allow public insert of unapproved testimonials"
+  on public.de_testimonials for insert
+  with check (is_approved = false);
+
+create policy "Allow authenticated admin full access to testimonials"
   on public.de_testimonials for all
   to authenticated
   using (true)
@@ -144,8 +153,5 @@ insert into public.de_products (id, sku, name, category_id, price, compare_price
 ('p-007', 'DC-SW-007', 'DC Duo — Two Friends Edition', 'cat-1', 159.99, null, 'Two DC Creatives tees, two different logo placements. Shot together, worn together. Limited friendship edition.', array['#0A0A0A'], array['Black Duo'], array['S/S', 'M/M', 'L/L', 'M/L'], 22, false, false, true, 4.80, 64, array['/products/tee-black-duo-girls.jpg', '/products/tee-black-girl-tree.jpg']),
 ('p-008', 'DC-ES-008', 'DC Garden Series Tee', 'cat-2', 79.99, null, 'Lush. Tropical. DE Creatives. Shot in the garden series — the DC bracket logo pops bold against the greens. Premium 300GSM cotton.', array['#0A0A0A'], array['Jet Black'], array['XS', 'S', 'M', 'L', 'XL'], 55, false, false, true, 4.80, 218, array['/products/tee-black-girl-garden.jpg', '/products/tee-black-girl-smile2.jpg']);
 
--- Insert Testimonials
-insert into public.de_testimonials (name, location, text, rating, avatar) values
-('Kwame A.', 'Accra, Ghana', 'DE Creatives completely changed how I approach fashion. The quality is unreal — these pieces are investment-grade.', 5, 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80'),
-('Zara M.', 'Lagos, Nigeria', 'The bracket logo tee is the most premium item I own. Worth every cedi. Will be ordering again.', 5, 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=80'),
-('Olu B.', 'London, UK', 'Fast shipping, incredible packaging, and the fits are exactly as advertised. DE Creatives is the real deal.', 5, 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=80');
+-- Testimonials are no longer seeded - they come from real customers via the
+-- storefront review form and go live only after admin approval.

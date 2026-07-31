@@ -1,7 +1,77 @@
-import { testimonials } from '../../data/mockData';
+import { useState } from 'react';
+import { useApp } from '../../context/AppContext';
 import './Testimonials.css';
 
+function initials(name) {
+  return (name || '?')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(w => w[0]?.toUpperCase())
+    .join('');
+}
+
+function ReviewForm({ onDone }) {
+  const { submitTestimonial } = useApp();
+  const [form, setForm] = useState({ name: '', location: '', text: '', rating: 5 });
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.name || !form.text) return;
+    setSubmitting(true);
+    const ok = await submitTestimonial(form);
+    setSubmitting(false);
+    if (ok) {
+      setForm({ name: '', location: '', text: '', rating: 5 });
+      onDone?.();
+    }
+  };
+
+  return (
+    <form className="testimonials__form" onSubmit={handleSubmit} noValidate>
+      <div className="testimonials__form-row">
+        <div className="form-group">
+          <label htmlFor="review-name" className="form-label">Your Name *</label>
+          <input id="review-name" name="name" type="text" className="form-input" value={form.name} onChange={handleChange} required placeholder="Jane Doe" />
+        </div>
+        <div className="form-group">
+          <label htmlFor="review-location" className="form-label">Location</label>
+          <input id="review-location" name="location" type="text" className="form-input" value={form.location} onChange={handleChange} placeholder="Accra, Ghana" />
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="review-rating" className="form-label">Rating</label>
+        <select id="review-rating" name="rating" className="form-input" value={form.rating} onChange={handleChange}>
+          {[5, 4, 3, 2, 1].map(n => (
+            <option key={n} value={n}>{'★'.repeat(n)}{'☆'.repeat(5 - n)} ({n})</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="review-text" className="form-label">Your Experience *</label>
+        <textarea id="review-text" name="text" className="form-input" rows="4" value={form.text} onChange={handleChange} required placeholder="Tell us what you thought..." style={{ resize: 'vertical', lineHeight: 1.6 }} />
+      </div>
+
+      <button type="submit" className="btn btn-primary" disabled={submitting}>
+        {submitting ? 'Submitting...' : 'Submit Review'}
+      </button>
+      <p className="testimonials__form-note">Reviews are checked before they go live, so yours won't appear immediately.</p>
+    </form>
+  );
+}
+
 export default function Testimonials() {
+  const { testimonials } = useApp();
+  const [showForm, setShowForm] = useState(false);
+
   return (
     <section className="testimonials" id="reviews" aria-label="Customer testimonials">
       <div className="container">
@@ -11,26 +81,47 @@ export default function Testimonials() {
             WHAT THEY <span style={{ color: 'var(--turquoise)' }}>SAY</span>
           </h2>
         </div>
-        <div className="testimonials__grid">
-          {testimonials.map((t, i) => (
-            <article
-              key={t.id}
-              className="testimonials__card animate-fade-up"
-              style={{ animationDelay: `${i * 0.15}s` }}
-            >
-              <div className="testimonials__stars">
-                {'★'.repeat(t.rating)}
-              </div>
-              <blockquote className="testimonials__quote">"{t.text}"</blockquote>
-              <footer className="testimonials__author">
-                <img src={t.avatar} alt={t.name} className="testimonials__avatar" loading="lazy" />
-                <div>
-                  <p className="testimonials__name">{t.name}</p>
-                  <p className="testimonials__location">{t.location}</p>
+
+        {testimonials.length > 0 ? (
+          <div className="testimonials__grid">
+            {testimonials.map((t, i) => (
+              <article
+                key={t.id}
+                className="testimonials__card animate-fade-up"
+                style={{ animationDelay: `${i * 0.15}s` }}
+              >
+                <div className="testimonials__stars">
+                  {'★'.repeat(t.rating)}
                 </div>
-              </footer>
-            </article>
-          ))}
+                <blockquote className="testimonials__quote">"{t.text}"</blockquote>
+                <footer className="testimonials__author">
+                  {t.avatar ? (
+                    <img src={t.avatar} alt={t.name} className="testimonials__avatar" loading="lazy" />
+                  ) : (
+                    <div className="testimonials__avatar testimonials__avatar--initials" aria-hidden="true">{initials(t.name)}</div>
+                  )}
+                  <div>
+                    <p className="testimonials__name">{t.name}</p>
+                    {t.location && <p className="testimonials__location">{t.location}</p>}
+                  </div>
+                </footer>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="testimonials__empty">
+            <p>No reviews yet — be the first to share your experience.</p>
+          </div>
+        )}
+
+        <div className="testimonials__cta">
+          {showForm ? (
+            <ReviewForm onDone={() => setShowForm(false)} />
+          ) : (
+            <button className="btn btn-outline" onClick={() => setShowForm(true)}>
+              Leave a Review
+            </button>
+          )}
         </div>
 
         {/* Brand Marquee */}
