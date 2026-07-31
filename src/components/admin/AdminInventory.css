@@ -138,6 +138,43 @@
   margin-top: var(--space-3);
 }
 
+.admin-image-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+.admin-image-list__item {
+  position: relative;
+  width: 120px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.admin-image-list__thumb {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+.admin-image-list__cover-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 0.65rem;
+  padding: 1px 6px;
+}
+.admin-image-list__controls {
+  display: flex;
+  gap: 4px;
+}
+.admin-image-list__controls .btn {
+  flex: 1;
+  padding: 4px 6px;
+  font-size: 0.7rem;
+}
+
 @media (max-width: 900px) {
   .admin-categories__layout { grid-template-columns: 1fr; }
   .admin-add-form__grid { grid-template-columns: 1fr; }

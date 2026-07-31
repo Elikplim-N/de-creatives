@@ -8,11 +8,11 @@ const emptyForm = {
   category: '', categoryName: '',
   description: '', sizes: 'S, M, L, XL', stock: '',
   isNew: true, isFeatured: false, isBestseller: false,
-  imagePreview: null,
+  images: [], // ordered list of { url, file? } - file present only for not-yet-uploaded picks
 };
 
 export default function AdminProducts() {
-  const { products, categories, addProduct, deleteProduct, updateProduct } = useApp();
+  const { products, categories, addProduct, deleteProduct, updateProduct, uploadProductImages } = useApp();
   // Category is optional - products can be added as Uncategorized and sorted
   // into categories later, so the form must never default to (or require) an
   // id that doesn't actually exist in the database.
@@ -21,6 +21,7 @@ export default function AdminProducts() {
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const filtered = products.filter(p =>
     !search || p.name.toLowerCase().includes(search.toLowerCase())
@@ -31,34 +32,66 @@ export default function AdminProducts() {
     setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setForm(prev => ({ ...prev, imagePreview: ev.target.result }));
-    reader.readAsDataURL(file);
+  const handleImagesChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    const newItems = files.map(file => ({ url: URL.createObjectURL(file), file }));
+    setForm(prev => ({ ...prev, images: [...prev.images, ...newItems] }));
+    e.target.value = ''; // allow re-selecting the same file again later
   };
 
-  const handleSubmit = (e) => {
+  const removeImage = (index) => {
+    setForm(prev => {
+      const target = prev.images[index];
+      if (target?.file) URL.revokeObjectURL(target.url);
+      return { ...prev, images: prev.images.filter((_, i) => i !== index) };
+    });
+  };
+
+  const moveImage = (index, direction) => {
+    setForm(prev => {
+      const next = [...prev.images];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return { ...prev, images: next };
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.price) return;
     const cat = categories.find(c => c.id === form.category);
-    const payload = {
-      ...form,
-      price: parseFloat(form.price),
-      comparePrice: form.comparePrice ? parseFloat(form.comparePrice) : null,
-      stock: parseInt(form.stock) || 0,
-      sizes: form.sizes.split(',').map(s => s.trim()).filter(Boolean),
-      categoryName: cat?.name || 'Uncategorized',
-    };
-    if (editId) {
-      updateProduct(editId, payload);
-      setEditId(null);
-    } else {
-      addProduct(payload);
+
+    setUploading(true);
+    try {
+      // Upload only the newly-picked files, in place, preserving order
+      // against the already-uploaded URLs already sitting in the list.
+      const filesToUpload = form.images.filter(img => img.file).map(img => img.file);
+      const uploadedUrls = filesToUpload.length > 0 ? await uploadProductImages(filesToUpload) : [];
+      let uploadIdx = 0;
+      const images = form.images.map(img => img.file ? uploadedUrls[uploadIdx++] : img.url);
+
+      const payload = {
+        ...form,
+        price: parseFloat(form.price),
+        comparePrice: form.comparePrice ? parseFloat(form.comparePrice) : null,
+        stock: parseInt(form.stock) || 0,
+        sizes: form.sizes.split(',').map(s => s.trim()).filter(Boolean),
+        categoryName: cat?.name || 'Uncategorized',
+        images,
+      };
+      if (editId) {
+        await updateProduct(editId, payload);
+        setEditId(null);
+      } else {
+        await addProduct(payload);
+      }
+      setForm(emptyForm);
+      setShowForm(false);
+    } finally {
+      setUploading(false);
     }
-    setForm(emptyForm);
-    setShowForm(false);
   };
 
   const handleEdit = (product) => {
@@ -69,6 +102,7 @@ export default function AdminProducts() {
       comparePrice: product.comparePrice?.toString() || '',
       stock: (product.stock || 0).toString(),
       sizes: (product.sizes || []).join(', '),
+      images: (product.images || []).map(url => ({ url })),
     });
     setEditId(product.id);
     setShowForm(true);
@@ -105,19 +139,29 @@ export default function AdminProducts() {
             <div className="admin-add-form__grid">
               {/* Image Upload */}
               <div className="form-group admin-add-form__full">
-                <label className="form-label">Product Image</label>
+                <label className="form-label">Product Images</label>
                 <div className="admin-upload-zone">
-                  <input type="file" accept="image/*" onChange={handleImageChange} aria-label="Upload product image" />
-                  {form.imagePreview ? (
-                    <img src={form.imagePreview} alt="Preview" className="admin-upload-preview" />
-                  ) : (
-                    <>
-                      <div className="admin-upload-zone__icon">📸</div>
-                      <p className="admin-upload-zone__text">Click to upload or drag & drop</p>
-                      <p className="admin-upload-zone__sub">PNG, JPG up to 10MB</p>
-                    </>
-                  )}
+                  <input type="file" accept="image/*" multiple onChange={handleImagesChange} aria-label="Upload product images" />
+                  <div className="admin-upload-zone__icon">📸</div>
+                  <p className="admin-upload-zone__text">Click to upload or drag & drop</p>
+                  <p className="admin-upload-zone__sub">PNG, JPG up to 10MB each &middot; first image is the cover shown in listings</p>
                 </div>
+
+                {form.images.length > 0 && (
+                  <div className="admin-image-list">
+                    {form.images.map((img, i) => (
+                      <div key={img.url} className="admin-image-list__item">
+                        <img src={img.url} alt={`Product ${i + 1}`} className="admin-image-list__thumb" />
+                        {i === 0 && <span className="badge badge-turquoise admin-image-list__cover-badge">Cover</span>}
+                        <div className="admin-image-list__controls">
+                          <button type="button" className="btn btn-outline btn-sm" onClick={() => moveImage(i, -1)} disabled={i === 0} aria-label="Move left">←</button>
+                          <button type="button" className="btn btn-outline btn-sm" onClick={() => moveImage(i, 1)} disabled={i === form.images.length - 1} aria-label="Move right">→</button>
+                          <button type="button" className="btn btn-outline btn-sm" style={{ color: 'var(--danger)', borderColor: 'rgba(239,68,68,0.3)' }} onClick={() => removeImage(i)} aria-label="Remove image">✕</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="form-group">
@@ -178,8 +222,8 @@ export default function AdminProducts() {
             </div>
 
             <div style={{ display: 'flex', gap: 'var(--space-3)', paddingTop: 'var(--space-2)' }}>
-              <button type="submit" className="btn btn-primary">
-                {editId ? 'Save Changes' : 'Add Product'}
+              <button type="submit" className="btn btn-primary" disabled={uploading}>
+                {uploading ? 'Saving...' : (editId ? 'Save Changes' : 'Add Product')}
               </button>
               <button type="button" className="btn btn-outline" onClick={() => { setShowForm(false); setEditId(null); setForm(emptyForm); }}>
                 Cancel
@@ -227,7 +271,7 @@ export default function AdminProducts() {
                       <img src={(p.images && p.images[0]) || '/logo.png'} alt={p.name} style={{ width: '48px', height: '48px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} loading="lazy" />
                       <div>
                         <p style={{ fontFamily: 'var(--font-accent)', fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.875rem' }}>{p.name}</p>
-                        <p style={{ fontFamily: 'var(--font-accent)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>{p.sku}</p>
+                        <p style={{ fontFamily: 'var(--font-accent)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>{p.sku} &middot; {(p.images || []).length} photo{(p.images || []).length === 1 ? '' : 's'}</p>
                       </div>
                     </div>
                   </td>

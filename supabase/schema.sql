@@ -132,6 +132,36 @@ create policy "Allow authenticated admin update access to orders"
   with check (true);
 
 -- ========================================================
+-- STORAGE (PRODUCT IMAGES)
+-- ========================================================
+-- Product photos are uploaded as real files here instead of being stored as
+-- base64 text in de_products.images - that approach bloated every row and
+-- slowed down every product-list query as the catalog grew.
+
+insert into storage.buckets (id, name, public)
+values ('product-images', 'product-images', true)
+on conflict (id) do nothing;
+
+create policy "Public read access to product images"
+  on storage.objects for select
+  using (bucket_id = 'product-images');
+
+create policy "Authenticated upload of product images"
+  on storage.objects for insert
+  to authenticated
+  with check (bucket_id = 'product-images');
+
+create policy "Authenticated update of product images"
+  on storage.objects for update
+  to authenticated
+  using (bucket_id = 'product-images');
+
+create policy "Authenticated delete of product images"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'product-images');
+
+-- ========================================================
 -- SEED DATA (MOCK DATA CORRESPONDENCE)
 -- ========================================================
 
