@@ -11,10 +11,10 @@ export const categories = [
 
 export const products = [
   {
-    id: 'p-001', sku: 'DC-SW-001', name: 'DC Signature Tee — Black',
+    id: 'p-001', sku: 'DE-SW-001', name: 'DE Signature Tee — Black',
     category: 'cat-1', categoryName: 'Streetwear',
     price: 89.99, comparePrice: 120.00,
-    description: 'The original. Ultra-soft premium cotton, oversized silhouette. The iconic DC Creatives logo printed front-centre. This is what started it all.',
+    description: 'The original. Ultra-soft premium cotton, oversized silhouette. The iconic DE Creatives logo printed front-centre. This is what started it all.',
     colors: ['#0A0A0A', '#FAFAFA'],
     colorNames: ['Phantom Black', 'Clean White'],
     sizes: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
@@ -26,10 +26,10 @@ export const products = [
     ]
   },
   {
-    id: 'p-002', sku: 'DC-ES-002', name: 'DC Classic Tee — White',
+    id: 'p-002', sku: 'DE-ES-002', name: 'DE Classic Tee — White',
     category: 'cat-2', categoryName: 'Essentials',
     price: 64.99, comparePrice: null,
-    description: 'Walk by faith. Clean white oversized tee with the DC Creatives vertical back print. A wardrobe cornerstone built for everyday wear.',
+    description: 'Walk by faith. Clean white oversized tee with the DE Creatives vertical back print. A wardrobe cornerstone built for everyday wear.',
     colors: ['#FAFAFA', '#0A0A0A'],
     colorNames: ['Clean White', 'Phantom Black'],
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
@@ -41,10 +41,10 @@ export const products = [
     ]
   },
   {
-    id: 'p-003', sku: 'DC-LE-003', name: 'DC Bracket Logo Tee',
+    id: 'p-003', sku: 'DE-LE-003', name: 'DE Bracket Logo Tee',
     category: 'cat-3', categoryName: 'Limited Edition',
     price: 219.99, comparePrice: null,
-    description: 'Limited run. The bracket-frame DC Creatives logo in full teal-and-white on deep black. Only available while stock lasts — collector\'s status guaranteed.',
+    description: 'Limited run. The bracket-frame DE Creatives logo in full teal-and-white on deep black. Only available while stock lasts — collector\'s status guaranteed.',
     colors: ['#0A0A0A'],
     colorNames: ['Void Black'],
     sizes: ['S', 'M', 'L', 'XL'],
@@ -56,10 +56,10 @@ export const products = [
     ]
   },
   {
-    id: 'p-004', sku: 'DC-SW-004', name: 'DC Duo Set — His & Hers',
+    id: 'p-004', sku: 'DE-SW-004', name: 'DE Duo Set — His & Hers',
     category: 'cat-1', categoryName: 'Streetwear',
     price: 149.99, comparePrice: 200.00,
-    description: 'Two iconic DC Creatives tees in one set. White and black, both with signature logo prints. Perfect for couples or as a gift.',
+    description: 'Two iconic DE Creatives tees in one set. White and black, both with signature logo prints. Perfect for couples or as a gift.',
     colors: ['#FAFAFA', '#0A0A0A'],
     colorNames: ['White + Black Set'],
     sizes: ['S/S', 'M/M', 'L/L', 'S/M', 'M/L'],
@@ -71,10 +71,10 @@ export const products = [
     ]
   },
   {
-    id: 'p-005', sku: 'DC-ES-005', name: 'DC Relaxed Fit Tee — Black',
+    id: 'p-005', sku: 'DE-ES-005', name: 'DE Relaxed Fit Tee — Black',
     category: 'cat-2', categoryName: 'Essentials',
     price: 74.99, comparePrice: null,
-    description: 'Relaxed silhouette, premium weight cotton. The DC bracket logo sits clean at the chest. Pairs with everything.',
+    description: 'Relaxed silhouette, premium weight cotton. The DE bracket logo sits clean at the chest. Pairs with everything.',
     colors: ['#0A0A0A'],
     colorNames: ['Jet Black'],
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
@@ -86,10 +86,10 @@ export const products = [
     ]
   },
   {
-    id: 'p-006', sku: 'DC-LE-006', name: 'DC Girls Collection Drop',
+    id: 'p-006', sku: 'DE-LE-006', name: 'DE Girls Collection Drop',
     category: 'cat-3', categoryName: 'Limited Edition',
     price: 89.99, comparePrice: 110.00,
-    description: 'Shot in the garden. The DC Creatives women\'s cut — slightly cropped, soft cotton, full logo print. Limited seasonal drop.',
+    description: 'Shot in the garden. The DE Creatives women\'s cut — slightly cropped, soft cotton, full logo print. Limited seasonal drop.',
     colors: ['#0A0A0A'],
     colorNames: ['Jet Black'],
     sizes: ['XS', 'S', 'M', 'L'],
@@ -101,10 +101,10 @@ export const products = [
     ]
   },
   {
-    id: 'p-007', sku: 'DC-SW-007', name: 'DC Duo — Two Friends Edition',
+    id: 'p-007', sku: 'DE-SW-007', name: 'DE Duo — Two Friends Edition',
     category: 'cat-1', categoryName: 'Streetwear',
     price: 159.99, comparePrice: null,
-    description: 'Two DC Creatives tees, two different logo placements. Shot together, worn together. Limited friendship edition.',
+    description: 'Two DE Creatives tees, two different logo placements. Shot together, worn together. Limited friendship edition.',
     colors: ['#0A0A0A'],
     colorNames: ['Black Duo'],
     sizes: ['S/S', 'M/M', 'L/L', 'M/L'],
@@ -116,10 +116,10 @@ export const products = [
     ]
   },
   {
-    id: 'p-008', sku: 'DC-ES-008', name: 'DC Garden Series Tee',
+    id: 'p-008', sku: 'DE-ES-008', name: 'DE Garden Series Tee',
     category: 'cat-2', categoryName: 'Essentials',
     price: 79.99, comparePrice: null,
-    description: 'Lush. Tropical. DE Creatives. Shot in the garden series — the DC bracket logo pops bold against the greens. Premium 300GSM cotton.',
+    description: 'Lush. Tropical. DE Creatives. Shot in the garden series — the DE bracket logo pops bold against the greens. Premium 300GSM cotton.',
     colors: ['#0A0A0A'],
     colorNames: ['Jet Black'],
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
@@ -155,7 +155,7 @@ export const heroSlides = [
   },
   {
     id: 3,
-    eyebrow: 'The DC Creatives Look',
+    eyebrow: 'The DE Creatives Look',
     heading: 'WEAR THE\nCULTURE',
     subheading: 'Bold prints, premium cotton, zero compromise. This is DE Creatives.',
     cta: 'Shop Now',
