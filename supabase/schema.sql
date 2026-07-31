@@ -11,6 +11,7 @@ create table public.de_categories (
   name text not null,
   slug text not null unique,
   description text,
+  image text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -166,11 +167,11 @@ create policy "Authenticated delete of product images"
 -- ========================================================
 
 -- Insert Categories
-insert into public.de_categories (id, name, slug, description) values
-('cat-1', 'Streetwear', 'streetwear', 'Bold, urban-inspired pieces that make a statement.'),
-('cat-2', 'Essentials', 'essentials', 'Premium basics engineered for everyday luxury.'),
-('cat-3', 'Limited Edition', 'limited-edition', 'Exclusive drops with limited-run designs.'),
-('cat-4', 'Accessories', 'accessories', 'The details that define your look.');
+insert into public.de_categories (id, name, slug, description, image) values
+('cat-1', 'Streetwear', 'streetwear', 'Bold, urban-inspired pieces that make a statement.', '/products/tee-black-girl-palm.jpg'),
+('cat-2', 'Essentials', 'essentials', 'Premium basics engineered for everyday luxury.', '/products/tee-white-back.jpg'),
+('cat-3', 'Limited Edition', 'limited-edition', 'Exclusive drops with limited-run designs.', '/products/tee-black-girl-garden.jpg'),
+('cat-4', 'Accessories', 'accessories', 'The details that define your look.', '/products/tee-black-duo-girls.jpg');
 
 -- Insert Products
 insert into public.de_products (id, sku, name, category_id, price, compare_price, description, colors, color_names, sizes, stock, is_new, is_featured, is_bestseller, rating, review_count, images) values

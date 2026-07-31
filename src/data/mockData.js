@@ -3,10 +3,10 @@
 // =============================================
 
 export const categories = [
-  { id: 'cat-1', name: 'Streetwear', slug: 'streetwear', count: 24, description: 'Bold, urban-inspired pieces that make a statement.' },
-  { id: 'cat-2', name: 'Essentials', slug: 'essentials', count: 18, description: 'Premium basics engineered for everyday luxury.' },
-  { id: 'cat-3', name: 'Limited Edition', slug: 'limited-edition', count: 8, description: 'Exclusive drops with limited-run designs.' },
-  { id: 'cat-4', name: 'Accessories', slug: 'accessories', count: 31, description: 'The details that define your look.' },
+  { id: 'cat-1', name: 'Streetwear', slug: 'streetwear', count: 24, description: 'Bold, urban-inspired pieces that make a statement.', image: '/products/tee-black-girl-palm.jpg' },
+  { id: 'cat-2', name: 'Essentials', slug: 'essentials', count: 18, description: 'Premium basics engineered for everyday luxury.', image: '/products/tee-white-back.jpg' },
+  { id: 'cat-3', name: 'Limited Edition', slug: 'limited-edition', count: 8, description: 'Exclusive drops with limited-run designs.', image: '/products/tee-black-girl-garden.jpg' },
+  { id: 'cat-4', name: 'Accessories', slug: 'accessories', count: 31, description: 'The details that define your look.', image: '/products/tee-black-duo-girls.jpg' },
 ];
 
 export const products = [
