@@ -6,7 +6,7 @@ import './AdminInventory.css';
 const emptyForm = { name: '', slug: '', description: '' };
 
 export default function AdminCategories() {
-  const { categories, addCategory, deleteCategory } = useApp();
+  const { categories, products, addCategory, deleteCategory } = useApp();
   const [form, setForm] = useState(emptyForm);
   const [confirmDelete, setConfirmDelete] = useState(null);
 
@@ -132,7 +132,7 @@ export default function AdminCategories() {
                     <div>
                       <p style={{ fontFamily: 'var(--font-accent)', fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.875rem' }}>{cat.name}</p>
                       <p style={{ fontFamily: 'var(--font-accent)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                        /{cat.slug} · {cat.count} items
+                        /{cat.slug} · {products.filter(p => p.category === cat.id).length} items
                       </p>
                     </div>
                   </div>

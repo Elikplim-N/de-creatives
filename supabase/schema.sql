@@ -50,11 +50,16 @@ create table public.de_testimonials (
 -- 4. ORDERS TABLE (For checkout logging)
 create table public.de_orders (
   id uuid default gen_random_uuid() primary key,
+  order_number text unique not null,
   customer_name text not null,
   customer_email text not null,
-  total_amount numeric(10, 2) not null check (total_amount >= 0),
+  shipping_address text,
+  payment_method text default 'cod' not null check (payment_method in ('momo', 'cod')),
+  subtotal numeric(10, 2) not null check (subtotal >= 0),
+  shipping numeric(10, 2) not null default 0 check (shipping >= 0),
+  total numeric(10, 2) not null check (total >= 0),
   status text default 'pending' not null check (status in ('pending', 'processing', 'shipped', 'cancelled', 'completed')),
-  items jsonb not null, -- Stores array of items: [{product_id, name, size, color, qty, price}]
+  items jsonb not null, -- Stores array of items: [{id, name, size, color, qty, price}]
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
