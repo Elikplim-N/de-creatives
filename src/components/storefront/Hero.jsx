@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 import { heroSlides } from '../../data/mockData';
 import './Hero.css';
 
 export default function Hero() {
+  const { products, testimonials } = useApp();
   const [current, setCurrent] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
 
@@ -74,14 +76,18 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Stats Strip */}
+        {/* Stats Strip - real data only; rating/review counts stay hidden
+            until there are actual approved reviews to back them. */}
         <div className="hero__stats">
           {[
-            { value: '10K+', label: 'Happy Customers' },
-            { value: '200+', label: 'Products' },
-            { value: '4.9★', label: 'Avg Rating' },
+            { value: `${products.length}+`, label: 'Products' },
+            testimonials.length > 0 && {
+              value: `${(testimonials.reduce((sum, t) => sum + t.rating, 0) / testimonials.length).toFixed(1)}★`,
+              label: 'Avg Rating',
+            },
+            testimonials.length > 0 && { value: `${testimonials.length}`, label: 'Reviews' },
             { value: '24H', label: 'Fast Dispatch' },
-          ].map((stat) => (
+          ].filter(Boolean).map((stat) => (
             <div key={stat.label} className="hero__stat">
               <span className="hero__stat-value">{stat.value}</span>
               <span className="hero__stat-label">{stat.label}</span>

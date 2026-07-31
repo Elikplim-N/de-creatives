@@ -218,7 +218,7 @@ export function AppProvider({ children }) {
         const id = `p-${Date.now()}`;
         const newProductDb = {
           id,
-          sku: product.sku || `DC-${Date.now()}`,
+          sku: product.sku || `DE-${Date.now()}`,
           name: product.name,
           category_id: product.category || null,
           price: parseFloat(product.price),
@@ -252,7 +252,7 @@ export function AppProvider({ children }) {
       const newProduct = {
         ...product,
         id: `p-${Date.now()}`,
-        sku: product.sku || `DC-${Date.now()}`,
+        sku: product.sku || `DE-${Date.now()}`,
         rating: 0, reviewCount: 0,
         isNew: true, isFeatured: false, isBestseller: false,
         images: product.imagePreview ? [product.imagePreview] : ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80'],

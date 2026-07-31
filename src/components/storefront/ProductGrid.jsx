@@ -1,10 +1,9 @@
 import { useApp } from '../../context/AppContext';
-import { categories } from '../../data/mockData';
 import ProductCard from './ProductCard';
 import './ProductGrid.css';
 
 export default function ProductGrid() {
-  const { filteredProducts, activeCategory, setActiveCategory, searchQuery, setSearchQuery } = useApp();
+  const { products, categories, filteredProducts, activeCategory, setActiveCategory, searchQuery, setSearchQuery } = useApp();
 
   return (
     <section className="product-grid-section" id="products" aria-label="Products">
@@ -38,7 +37,7 @@ export default function ProductGrid() {
             role="tab"
             aria-selected={activeCategory === 'all'}
           >
-            All ({filteredProducts.length + (activeCategory !== 'all' ? filteredProducts.length - filteredProducts.length : 0)})
+            All ({products.length})
           </button>
           {categories.map(cat => (
             <button

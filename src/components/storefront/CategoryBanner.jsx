@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
-import { categories } from '../../data/mockData';
 import './CategoryBanner.css';
 
 // Using real DE Creatives product/model photos for the editorial showcase
@@ -11,14 +10,18 @@ const catImages = {
   'cat-4': '/products/tee-black-duo-girls.jpg',       // Accessories (placeholder or model duo)
 };
 
+const FALLBACK_IMAGE = '/products/tee-black-girl-tree.jpg';
+
 export default function CategoryBanner() {
-  const { setActiveCategory } = useApp();
+  const { categories, products, setActiveCategory } = useApp();
   const navigate = useNavigate();
 
   const handleCategoryClick = (catId) => {
     setActiveCategory(catId);
     navigate('/shop');
   };
+
+  if (categories.length === 0) return null;
 
   return (
     <section className="cat-banner" id="editorial" aria-label="Editorial Showcase">
@@ -31,10 +34,10 @@ export default function CategoryBanner() {
               onClick={() => handleCategoryClick(cat.id)}
               aria-label={`Browse ${cat.name}`}
             >
-              <img src={catImages[cat.id]} alt={cat.name} loading="lazy" />
+              <img src={catImages[cat.id] || FALLBACK_IMAGE} alt={cat.name} loading="lazy" />
               <div className="cat-banner__overlay" />
               <div className="cat-banner__content">
-                <span className="cat-banner__count">{cat.count} Items</span>
+                <span className="cat-banner__count">{products.filter(p => p.category === cat.id).length} Items</span>
                 <h3 className="cat-banner__name">{cat.name}</h3>
                 <p className="cat-banner__desc">{cat.description}</p>
                 <span className="cat-banner__link">

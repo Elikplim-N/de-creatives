@@ -126,7 +126,7 @@ export default function AdminProducts() {
               </div>
               <div className="form-group">
                 <label htmlFor="prod-sku" className="form-label">SKU</label>
-                <input id="prod-sku" name="sku" type="text" className="form-input" placeholder="e.g. DC-SW-010" value={form.sku} onChange={handleChange} />
+                <input id="prod-sku" name="sku" type="text" className="form-input" placeholder="e.g. DE-SW-010" value={form.sku} onChange={handleChange} />
               </div>
               <div className="form-group">
                 <label htmlFor="prod-price" className="form-label">Price (USD) *</label>
