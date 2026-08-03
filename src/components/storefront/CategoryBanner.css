@@ -44,6 +44,12 @@
 }
 .cat-banner__item:hover img { transform: scale(1.08); }
 
+.cat-banner__no-image {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--bg-secondary), var(--turquoise-muted));
+}
+
 .cat-banner__overlay {
   position: absolute;
   inset: 0;

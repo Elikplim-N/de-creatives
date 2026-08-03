@@ -2,10 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import './CategoryBanner.css';
 
-// Categories manage their own cover image in Admin > Categories; this is
-// only shown for a category that hasn't had one set yet.
-const FALLBACK_IMAGE = '/products/tee-black-girl-tree.jpg';
-
 export default function CategoryBanner() {
   const { categories, products, setActiveCategory } = useApp();
   const navigate = useNavigate();
@@ -28,7 +24,11 @@ export default function CategoryBanner() {
               onClick={() => handleCategoryClick(cat.id)}
               aria-label={`Browse ${cat.name}`}
             >
-              <img src={cat.image || FALLBACK_IMAGE} alt={cat.name} loading="lazy" />
+              {cat.image ? (
+                <img src={cat.image} alt={cat.name} loading="lazy" />
+              ) : (
+                <div className="cat-banner__no-image" aria-hidden="true" />
+              )}
               <div className="cat-banner__overlay" />
               <div className="cat-banner__content">
                 <span className="cat-banner__count">{products.filter(p => p.category === cat.id).length} Items</span>
