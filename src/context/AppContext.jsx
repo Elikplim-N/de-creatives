@@ -27,18 +27,30 @@ function formatDbProduct(p, categoryList) {
 const PRODUCT_FIELD_TO_COLUMN = {
   category: 'category_id',
   comparePrice: 'compare_price',
+  reviewCount: 'review_count',
   isNew: 'is_new',
   isFeatured: 'is_featured',
   isBestseller: 'is_bestseller',
   colorNames: 'color_names',
 };
-const PRODUCT_UI_ONLY_FIELDS = new Set(['categoryName']);
+
+// Product objects carry both raw snake_case DB fields (formatDbProduct
+// spreads the row as-is) and the camelCase aliases above, and admin forms
+// round-trip the whole object back on save - so anything not a real
+// de_products column must be dropped here rather than mapped, or a single
+// missed alias above 400s the entire update (as reviewCount once did).
+const PRODUCT_DB_COLUMNS = new Set([
+  'sku', 'name', 'category_id', 'price', 'compare_price', 'description',
+  'colors', 'color_names', 'sizes', 'stock', 'is_new', 'is_featured',
+  'is_bestseller', 'rating', 'review_count', 'images',
+]);
 
 function toDbProductFields(fields) {
   const dbFields = {};
   for (const [key, value] of Object.entries(fields)) {
-    if (PRODUCT_UI_ONLY_FIELDS.has(key)) continue;
-    dbFields[PRODUCT_FIELD_TO_COLUMN[key] || key] = value;
+    const column = PRODUCT_FIELD_TO_COLUMN[key] || key;
+    if (!PRODUCT_DB_COLUMNS.has(column)) continue;
+    dbFields[column] = value;
   }
   if ('category' in fields) dbFields.category_id = fields.category || null;
   return dbFields;
