@@ -59,7 +59,7 @@ export default function Hero() {
             {slide.eyebrow}
           </span>
           <h1 className="hero__heading">
-            {slide.heading.split('\n').map((line, i) => (
+            {(slide.heading || '').split('\n').map((line, i) => (
               <span key={i} className="hero__heading-line">
                 {i === 1 ? <span className="hero__heading-accent">{line}</span> : line}
               </span>
