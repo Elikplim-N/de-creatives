@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
-import { heroSlides } from '../../data/mockData';
 import './Hero.css';
 
 export default function Hero() {
-  const { products, testimonials } = useApp();
+  const { products, testimonials, heroSlides: allSlides } = useApp();
+  const heroSlides = allSlides.filter(s => s.isActive !== false);
   const [current, setCurrent] = useState(0);
   const [transitioning, setTransitioning] = useState(false);
 
   useEffect(() => {
+    if (heroSlides.length <= 1) return;
     const t = setInterval(() => {
       setTransitioning(true);
       setTimeout(() => {
@@ -18,9 +19,11 @@ export default function Hero() {
       }, 400);
     }, 6000);
     return () => clearInterval(t);
-  }, []);
+  }, [heroSlides.length]);
 
-  const slide = heroSlides[current];
+  if (heroSlides.length === 0) return null;
+
+  const slide = heroSlides[current % heroSlides.length];
 
   return (
     <section className="hero" id="hero" aria-label="Hero section">

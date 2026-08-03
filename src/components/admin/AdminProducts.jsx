@@ -9,6 +9,7 @@ const emptyForm = {
   description: '', sizes: 'S, M, L, XL', stock: '',
   isNew: true, isFeatured: false, isBestseller: false,
   images: [], // ordered list of { url, file? } - file present only for not-yet-uploaded picks
+  colorSwatches: [], // ordered list of { hex, name }
 };
 
 export default function AdminProducts() {
@@ -58,6 +59,21 @@ export default function AdminProducts() {
     });
   };
 
+  const addColorSwatch = () => {
+    setForm(prev => ({ ...prev, colorSwatches: [...prev.colorSwatches, { hex: '#0A0A0A', name: '' }] }));
+  };
+
+  const updateColorSwatch = (index, field, value) => {
+    setForm(prev => ({
+      ...prev,
+      colorSwatches: prev.colorSwatches.map((c, i) => i === index ? { ...c, [field]: value } : c),
+    }));
+  };
+
+  const removeColorSwatch = (index) => {
+    setForm(prev => ({ ...prev, colorSwatches: prev.colorSwatches.filter((_, i) => i !== index) }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.price) return;
@@ -72,6 +88,7 @@ export default function AdminProducts() {
       let uploadIdx = 0;
       const images = form.images.map(img => img.file ? uploadedUrls[uploadIdx++] : img.url);
 
+      const namedSwatches = form.colorSwatches.filter(c => c.name.trim());
       const payload = {
         ...form,
         price: parseFloat(form.price),
@@ -80,7 +97,10 @@ export default function AdminProducts() {
         sizes: form.sizes.split(',').map(s => s.trim()).filter(Boolean),
         categoryName: cat?.name || 'Uncategorized',
         images,
+        colors: namedSwatches.map(c => c.hex),
+        colorNames: namedSwatches.map(c => c.name.trim()),
       };
+      delete payload.colorSwatches;
       if (editId) {
         await updateProduct(editId, payload);
         setEditId(null);
@@ -95,6 +115,8 @@ export default function AdminProducts() {
   };
 
   const handleEdit = (product) => {
+    const colors = product.colors || [];
+    const colorNames = product.colorNames || [];
     setForm({
       ...emptyForm,
       ...product,
@@ -103,6 +125,7 @@ export default function AdminProducts() {
       stock: (product.stock || 0).toString(),
       sizes: (product.sizes || []).join(', '),
       images: (product.images || []).map(url => ({ url })),
+      colorSwatches: colors.map((hex, i) => ({ hex, name: colorNames[i] || '' })),
     });
     setEditId(product.id);
     setShowForm(true);
@@ -194,6 +217,35 @@ export default function AdminProducts() {
               <div className="form-group admin-add-form__full">
                 <label htmlFor="prod-sizes" className="form-label">Sizes (comma separated)</label>
                 <input id="prod-sizes" name="sizes" type="text" className="form-input" placeholder="XS, S, M, L, XL, XXL" value={form.sizes} onChange={handleChange} />
+              </div>
+              <div className="form-group admin-add-form__full">
+                <label className="form-label">Color Options</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {form.colorSwatches.map((c, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="color"
+                        value={c.hex}
+                        onChange={(e) => updateColorSwatch(i, 'hex', e.target.value)}
+                        aria-label={`Color swatch ${i + 1}`}
+                        style={{ width: '40px', height: '38px', padding: '2px', background: 'none', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', cursor: 'pointer' }}
+                      />
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. Phantom Black"
+                        value={c.name}
+                        onChange={(e) => updateColorSwatch(i, 'name', e.target.value)}
+                        aria-label={`Color name ${i + 1}`}
+                      />
+                      <button type="button" className="btn btn-outline btn-sm" style={{ color: 'var(--danger)', borderColor: 'rgba(239,68,68,0.3)', flexShrink: 0 }} onClick={() => removeColorSwatch(i)} aria-label={`Remove color ${i + 1}`}>✕</button>
+                    </div>
+                  ))}
+                  <button type="button" className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }} onClick={addColorSwatch}>+ Add Color</button>
+                </div>
+                <small style={{ fontFamily: 'var(--font-accent)', fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', marginTop: '6px' }}>
+                  Leave empty to use the default color. Shoppers pick one before adding to cart.
+                </small>
               </div>
               <div className="form-group admin-add-form__full">
                 <label htmlFor="prod-desc" className="form-label">Description</label>
