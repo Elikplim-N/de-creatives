@@ -194,29 +194,36 @@ create policy "Authenticated delete of product images"
 -- SEED DATA (MOCK DATA CORRESPONDENCE)
 -- ========================================================
 
+-- Seeded rows below intentionally carry no image data. Every image the
+-- storefront shows must be a real file in the product-images Storage
+-- bucket (uploaded through Admin > Products/Categories/Homepage) - never a
+-- path into the frontend's own /public folder, which ships with the
+-- deployed bundle rather than living in Storage. Upload real photos for
+-- each row through the admin dashboard after seeding.
+
 -- Insert Categories
-insert into public.de_categories (id, name, slug, description, image) values
-('cat-1', 'Streetwear', 'streetwear', 'Bold, urban-inspired pieces that make a statement.', '/products/tee-black-girl-palm.jpg'),
-('cat-2', 'Essentials', 'essentials', 'Premium basics engineered for everyday luxury.', '/products/tee-white-back.jpg'),
-('cat-3', 'Limited Edition', 'limited-edition', 'Exclusive drops with limited-run designs.', '/products/tee-black-girl-garden.jpg'),
-('cat-4', 'Accessories', 'accessories', 'The details that define your look.', '/products/tee-black-duo-girls.jpg');
+insert into public.de_categories (id, name, slug, description) values
+('cat-1', 'Streetwear', 'streetwear', 'Bold, urban-inspired pieces that make a statement.'),
+('cat-2', 'Essentials', 'essentials', 'Premium basics engineered for everyday luxury.'),
+('cat-3', 'Limited Edition', 'limited-edition', 'Exclusive drops with limited-run designs.'),
+('cat-4', 'Accessories', 'accessories', 'The details that define your look.');
 
 -- Insert Hero Slides
-insert into public.de_hero_slides (id, eyebrow, heading, subheading, cta, cta_secondary, image, sort_order, is_active) values
-('hero-1', 'New Arrival — SS26', 'DEFINE YOUR' || chr(10) || 'CREATIVE', 'Premium streetwear engineered for the bold. Made in Africa, worn by the world.', 'Shop Collection', 'Explore Lookbook', '/products/tee-black-girl-palm.jpg', 0, true),
-('hero-2', 'Limited Edition Drop', 'WALK BY' || chr(10) || 'FAITH', 'The iconic white tee. Only 150 pieces. Own a piece of history.', 'Get Yours Now', 'View Details', '/products/tee-white-back.jpg', 1, true),
-('hero-3', 'The DE Creatives Look', 'WEAR THE' || chr(10) || 'CULTURE', 'Bold prints, premium cotton, zero compromise. This is DE Creatives.', 'Shop Now', 'See Lookbook', '/products/tee-black-duo-girls.jpg', 2, true);
+insert into public.de_hero_slides (id, eyebrow, heading, subheading, cta, cta_secondary, sort_order, is_active) values
+('hero-1', 'New Arrival — SS26', 'DEFINE YOUR' || chr(10) || 'CREATIVE', 'Premium streetwear engineered for the bold. Made in Africa, worn by the world.', 'Shop Collection', 'Explore Lookbook', 0, true),
+('hero-2', 'Limited Edition Drop', 'WALK BY' || chr(10) || 'FAITH', 'The iconic white tee. Only 150 pieces. Own a piece of history.', 'Get Yours Now', 'View Details', 1, true),
+('hero-3', 'The DE Creatives Look', 'WEAR THE' || chr(10) || 'CULTURE', 'Bold prints, premium cotton, zero compromise. This is DE Creatives.', 'Shop Now', 'See Lookbook', 2, true);
 
 -- Insert Products
-insert into public.de_products (id, sku, name, category_id, price, compare_price, description, colors, color_names, sizes, stock, is_new, is_featured, is_bestseller, rating, review_count, images) values
-('p-001', 'DE-SW-001', 'DE Signature Tee — Black', 'cat-1', 89.99, 120.00, 'The original. Ultra-soft premium cotton, oversized silhouette. The iconic DE Creatives logo printed front-centre. This is what started it all.', array['#0A0A0A', '#FAFAFA'], array['Phantom Black', 'Clean White'], array['XS', 'S', 'M', 'L', 'XL', 'XXL'], 47, true, true, false, 4.80, 124, array['/products/tee-black-girl-tree.jpg', '/products/tee-black-girl-smile.jpg']),
-('p-002', 'DE-ES-002', 'DE Classic Tee — White', 'cat-2', 64.99, null, 'Walk by faith. Clean white oversized tee with the DE Creatives vertical back print. A wardrobe cornerstone built for everyday wear.', array['#FAFAFA', '#0A0A0A'], array['Clean White', 'Phantom Black'], array['XS', 'S', 'M', 'L', 'XL'], 83, false, true, true, 4.90, 287, array['/products/tee-white-back.jpg', '/products/tee-duo-white-black.jpg']),
-('p-003', 'DE-LE-003', 'DE Bracket Logo Tee', 'cat-3', 219.99, null, 'Limited run. The bracket-frame DE Creatives logo in full teal-and-white on deep black. Only available while stock lasts — collector''s status guaranteed.', array['#0A0A0A'], array['Void Black'], array['S', 'M', 'L', 'XL'], 12, true, true, false, 5.00, 41, array['/products/tee-black-girl-palm.jpg', '/products/tee-black-girl-garden.jpg']),
-('p-004', 'DE-SW-004', 'DE Duo Set — His & Hers', 'cat-1', 149.99, 200.00, 'Two iconic DE Creatives tees in one set. White and black, both with signature logo prints. Perfect for couples or as a gift.', array['#FAFAFA', '#0A0A0A'], array['White + Black Set'], array['S/S', 'M/M', 'L/L', 'S/M', 'M/L'], 29, false, false, true, 4.70, 98, array['/products/tee-duo-white-black.jpg', '/products/tee-black-duo-girls.jpg']),
-('p-005', 'DE-ES-005', 'DE Relaxed Fit Tee — Black', 'cat-2', 74.99, null, 'Relaxed silhouette, premium weight cotton. The DE bracket logo sits clean at the chest. Pairs with everything.', array['#0A0A0A'], array['Jet Black'], array['XS', 'S', 'M', 'L', 'XL'], 62, false, true, false, 4.70, 153, array['/products/tee-black-girl-smile2.jpg', '/products/tee-black-girl-smile.jpg']),
-('p-006', 'DE-LE-006', 'DE Girls Collection Drop', 'cat-3', 89.99, 110.00, 'Shot in the garden. The DE Creatives women''s cut — slightly cropped, soft cotton, full logo print. Limited seasonal drop.', array['#0A0A0A'], array['Jet Black'], array['XS', 'S', 'M', 'L'], 38, true, false, false, 4.50, 76, array['/products/tee-black-girl-grass.jpg', '/products/tee-black-girl-palm.jpg']),
-('p-007', 'DE-SW-007', 'DE Duo — Two Friends Edition', 'cat-1', 159.99, null, 'Two DE Creatives tees, two different logo placements. Shot together, worn together. Limited friendship edition.', array['#0A0A0A'], array['Black Duo'], array['S/S', 'M/M', 'L/L', 'M/L'], 22, false, false, true, 4.80, 64, array['/products/tee-black-duo-girls.jpg', '/products/tee-black-girl-tree.jpg']),
-('p-008', 'DE-ES-008', 'DE Garden Series Tee', 'cat-2', 79.99, null, 'Lush. Tropical. DE Creatives. Shot in the garden series — the DE bracket logo pops bold against the greens. Premium 300GSM cotton.', array['#0A0A0A'], array['Jet Black'], array['XS', 'S', 'M', 'L', 'XL'], 55, false, false, true, 4.80, 218, array['/products/tee-black-girl-garden.jpg', '/products/tee-black-girl-smile2.jpg']);
+insert into public.de_products (id, sku, name, category_id, price, compare_price, description, colors, color_names, sizes, stock, is_new, is_featured, is_bestseller, rating, review_count) values
+('p-001', 'DE-SW-001', 'DE Signature Tee — Black', 'cat-1', 89.99, 120.00, 'The original. Ultra-soft premium cotton, oversized silhouette. The iconic DE Creatives logo printed front-centre. This is what started it all.', array['#0A0A0A', '#FAFAFA'], array['Phantom Black', 'Clean White'], array['XS', 'S', 'M', 'L', 'XL', 'XXL'], 47, true, true, false, 4.80, 124),
+('p-002', 'DE-ES-002', 'DE Classic Tee — White', 'cat-2', 64.99, null, 'Walk by faith. Clean white oversized tee with the DE Creatives vertical back print. A wardrobe cornerstone built for everyday wear.', array['#FAFAFA', '#0A0A0A'], array['Clean White', 'Phantom Black'], array['XS', 'S', 'M', 'L', 'XL'], 83, false, true, true, 4.90, 287),
+('p-003', 'DE-LE-003', 'DE Bracket Logo Tee', 'cat-3', 219.99, null, 'Limited run. The bracket-frame DE Creatives logo in full teal-and-white on deep black. Only available while stock lasts — collector''s status guaranteed.', array['#0A0A0A'], array['Void Black'], array['S', 'M', 'L', 'XL'], 12, true, true, false, 5.00, 41),
+('p-004', 'DE-SW-004', 'DE Duo Set — His & Hers', 'cat-1', 149.99, 200.00, 'Two iconic DE Creatives tees in one set. White and black, both with signature logo prints. Perfect for couples or as a gift.', array['#FAFAFA', '#0A0A0A'], array['White + Black Set'], array['S/S', 'M/M', 'L/L', 'S/M', 'M/L'], 29, false, false, true, 4.70, 98),
+('p-005', 'DE-ES-005', 'DE Relaxed Fit Tee — Black', 'cat-2', 74.99, null, 'Relaxed silhouette, premium weight cotton. The DE bracket logo sits clean at the chest. Pairs with everything.', array['#0A0A0A'], array['Jet Black'], array['XS', 'S', 'M', 'L', 'XL'], 62, false, true, false, 4.70, 153),
+('p-006', 'DE-LE-006', 'DE Girls Collection Drop', 'cat-3', 89.99, 110.00, 'Shot in the garden. The DE Creatives women''s cut — slightly cropped, soft cotton, full logo print. Limited seasonal drop.', array['#0A0A0A'], array['Jet Black'], array['XS', 'S', 'M', 'L'], 38, true, false, false, 4.50, 76),
+('p-007', 'DE-SW-007', 'DE Duo — Two Friends Edition', 'cat-1', 159.99, null, 'Two DE Creatives tees, two different logo placements. Shot together, worn together. Limited friendship edition.', array['#0A0A0A'], array['Black Duo'], array['S/S', 'M/M', 'L/L', 'M/L'], 22, false, false, true, 4.80, 64),
+('p-008', 'DE-ES-008', 'DE Garden Series Tee', 'cat-2', 79.99, null, 'Lush. Tropical. DE Creatives. Shot in the garden series — the DE bracket logo pops bold against the greens. Premium 300GSM cotton.', array['#0A0A0A'], array['Jet Black'], array['XS', 'S', 'M', 'L', 'XL'], 55, false, false, true, 4.80, 218);
 
 -- Testimonials are no longer seeded - they come from real customers via the
 -- storefront review form and go live only after admin approval.

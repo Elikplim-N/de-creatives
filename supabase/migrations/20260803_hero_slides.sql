@@ -32,10 +32,14 @@ create policy "Allow authenticated admin full access to hero slides"
 
 -- Seed with the slides that used to be hardcoded, so the homepage isn't
 -- blank the moment this migration runs. No-op if already seeded.
-insert into public.de_hero_slides (id, eyebrow, heading, subheading, cta, cta_secondary, image, sort_order, is_active)
+-- Deliberately no image here - every slide image must be a real file
+-- uploaded to Storage through Admin > Homepage, never a path into the
+-- frontend's own /public folder. Upload a background photo for each
+-- slide from the dashboard after this runs.
+insert into public.de_hero_slides (id, eyebrow, heading, subheading, cta, cta_secondary, sort_order, is_active)
 select * from (values
-  ('hero-1', 'New Arrival — SS26', 'DEFINE YOUR' || chr(10) || 'CREATIVE', 'Premium streetwear engineered for the bold. Made in Africa, worn by the world.', 'Shop Collection', 'Explore Lookbook', '/products/tee-black-girl-palm.jpg', 0, true),
-  ('hero-2', 'Limited Edition Drop', 'WALK BY' || chr(10) || 'FAITH', 'The iconic white tee. Only 150 pieces. Own a piece of history.', 'Get Yours Now', 'View Details', '/products/tee-white-back.jpg', 1, true),
-  ('hero-3', 'The DE Creatives Look', 'WEAR THE' || chr(10) || 'CULTURE', 'Bold prints, premium cotton, zero compromise. This is DE Creatives.', 'Shop Now', 'See Lookbook', '/products/tee-black-duo-girls.jpg', 2, true)
-) as seed(id, eyebrow, heading, subheading, cta, cta_secondary, image, sort_order, is_active)
+  ('hero-1', 'New Arrival — SS26', 'DEFINE YOUR' || chr(10) || 'CREATIVE', 'Premium streetwear engineered for the bold. Made in Africa, worn by the world.', 'Shop Collection', 'Explore Lookbook', 0, true),
+  ('hero-2', 'Limited Edition Drop', 'WALK BY' || chr(10) || 'FAITH', 'The iconic white tee. Only 150 pieces. Own a piece of history.', 'Get Yours Now', 'View Details', 1, true),
+  ('hero-3', 'The DE Creatives Look', 'WEAR THE' || chr(10) || 'CULTURE', 'Bold prints, premium cotton, zero compromise. This is DE Creatives.', 'Shop Now', 'See Lookbook', 2, true)
+) as seed(id, eyebrow, heading, subheading, cta, cta_secondary, sort_order, is_active)
 where not exists (select 1 from public.de_hero_slides);

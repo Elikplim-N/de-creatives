@@ -269,8 +269,6 @@ export function AppProvider({ children }) {
     }
   }, [showToast]);
 
-  const DEFAULT_PRODUCT_IMAGE = 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80';
-
   // Uploads real files to Supabase Storage and returns their public URLs, in
   // the same order given - order matters, since images[0] is the cover shown
   // on product cards and the storefront grid. Falls back to local data URLs
@@ -314,7 +312,7 @@ export function AppProvider({ children }) {
           colors: product.colors?.length > 0 ? product.colors : ['#0A0A0A'],
           color_names: product.colorNames?.length > 0 ? product.colorNames : ['Default Jet Black'],
           sizes: product.sizes?.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL'],
-          images: product.images?.length > 0 ? product.images : [DEFAULT_PRODUCT_IMAGE],
+          images: product.images || [],
           rating: 5.0,
           review_count: 0
         };
@@ -340,7 +338,7 @@ export function AppProvider({ children }) {
         isNew: product.isNew ?? true,
         isFeatured: product.isFeatured ?? false,
         isBestseller: product.isBestseller ?? false,
-        images: product.images?.length > 0 ? product.images : [DEFAULT_PRODUCT_IMAGE],
+        images: product.images || [],
         colors: product.colors?.length > 0 ? product.colors : ['#1A1A1A'],
         colorNames: product.colorNames?.length > 0 ? product.colorNames : ['Default'],
       };
