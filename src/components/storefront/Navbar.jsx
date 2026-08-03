@@ -11,9 +11,6 @@ export default function Navbar() {
     setSearchQuery,
     setIsCartOpen,
     setIsWishlistOpen,
-    currency,
-    setCurrency,
-    currencies,
   } = useApp();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -85,22 +82,6 @@ export default function Navbar() {
             </div>
           ) : (
             <>
-              {/* Currency Dropdown */}
-              <div className="navbar__currency-wrapper">
-                <select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  className="navbar__currency-select"
-                  aria-label="Select currency"
-                >
-                  {Object.keys(currencies).map(code => (
-                    <option key={code} value={code}>
-                      {code}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
               <button onClick={() => setSearchOpen(true)} className="navbar__action-btn" aria-label="Search">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
               </button>

@@ -143,34 +143,6 @@
   background: var(--turquoise-muted);
 }
 
-/* Currency Selector */
-.navbar__currency-wrapper {
-  display: flex;
-  align-items: center;
-  margin-right: var(--space-1);
-}
-.navbar__currency-select {
-  background: none;
-  border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  color: var(--text-secondary);
-  font-family: var(--font-accent);
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 4px 8px;
-  cursor: pointer;
-  outline: none;
-  transition: all var(--transition-fast);
-}
-.navbar__currency-select:hover {
-  color: var(--white);
-  border-color: rgba(255, 255, 255, 0.25);
-}
-.navbar__currency-select option {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-}
-
 /* Search */
 .navbar__search-wrap {
   display: flex;

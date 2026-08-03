@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import AdminInventory from '../components/admin/AdminInventory';
 import AdminProducts from '../components/admin/AdminProducts';
 import AdminCategories from '../components/admin/AdminCategories';
+import AdminHero from '../components/admin/AdminHero';
 import AdminOverview from '../components/admin/AdminOverview';
 import AdminReviews from '../components/admin/AdminReviews';
 import './AdminDashboard.css';
@@ -43,6 +44,14 @@ const navItems = [
         <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
         <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
         <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'homepage', label: 'Homepage', path: '/admin/homepage',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
       </svg>
     ),
   },
@@ -169,6 +178,7 @@ export default function AdminDashboard() {
             <Route path="inventory" element={<AdminInventory />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="categories" element={<AdminCategories />} />
+            <Route path="homepage" element={<AdminHero />} />
             <Route path="reviews" element={<AdminReviews />} />
           </Routes>
         </div>

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { products as initialProducts, categories as initialCategories, testimonials as initialTestimonials, adminCredentials } from '../data/mockData';
+import { products as initialProducts, categories as initialCategories, testimonials as initialTestimonials, heroSlides as initialHeroSlides, adminCredentials } from '../data/mockData';
 import { supabase } from '../lib/supabaseClient';
 
 const AppContext = createContext(null);
@@ -17,6 +17,7 @@ function formatDbProduct(p, categoryList) {
     isNew: p.is_new,
     isFeatured: p.is_featured,
     isBestseller: p.is_bestseller,
+    colorNames: p.color_names,
   };
 }
 
@@ -29,17 +30,43 @@ const PRODUCT_FIELD_TO_COLUMN = {
   isNew: 'is_new',
   isFeatured: 'is_featured',
   isBestseller: 'is_bestseller',
+  colorNames: 'color_names',
 };
 const PRODUCT_UI_ONLY_FIELDS = new Set(['categoryName']);
 
-function toDbProductUpdates(updates) {
-  const dbUpdates = {};
-  for (const [key, value] of Object.entries(updates)) {
+function toDbProductFields(fields) {
+  const dbFields = {};
+  for (const [key, value] of Object.entries(fields)) {
     if (PRODUCT_UI_ONLY_FIELDS.has(key)) continue;
-    dbUpdates[PRODUCT_FIELD_TO_COLUMN[key] || key] = value;
+    dbFields[PRODUCT_FIELD_TO_COLUMN[key] || key] = value;
   }
-  if ('category' in updates) dbUpdates.category_id = updates.category || null;
-  return dbUpdates;
+  if ('category' in fields) dbFields.category_id = fields.category || null;
+  return dbFields;
+}
+
+// Bridges de_hero_slides' snake_case DB columns to the camelCase fields the
+// Hero carousel and admin form read.
+function formatDbHeroSlide(s) {
+  return {
+    ...s,
+    ctaSecondary: s.cta_secondary,
+    sortOrder: s.sort_order,
+    isActive: s.is_active,
+  };
+}
+
+const HERO_SLIDE_FIELD_TO_COLUMN = {
+  ctaSecondary: 'cta_secondary',
+  sortOrder: 'sort_order',
+  isActive: 'is_active',
+};
+
+function toDbHeroSlideFields(fields) {
+  const dbFields = {};
+  for (const [key, value] of Object.entries(fields)) {
+    dbFields[HERO_SLIDE_FIELD_TO_COLUMN[key] || key] = value;
+  }
+  return dbFields;
 }
 
 export function AppProvider({ children }) {
@@ -50,6 +77,7 @@ export function AppProvider({ children }) {
   const [categories, setCategories] = useState(initialCategories);
   const [orders, setOrders] = useState([]);
   const [testimonials, setTestimonials] = useState(initialTestimonials);
+  const [heroSlides, setHeroSlides] = useState(initialHeroSlides);
   const [pendingTestimonials, setPendingTestimonials] = useState([]);
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
@@ -94,6 +122,15 @@ export function AppProvider({ children }) {
           .limit(9);
         if (testError) throw testError;
         if (testData) setTestimonials(testData);
+
+        // Fetch Hero Slides from de_hero_slides (anon RLS returns active
+        // ones only; an admin session refetches the full set separately)
+        const { data: heroData, error: heroError } = await supabase
+          .from('de_hero_slides')
+          .select('*')
+          .order('sort_order', { ascending: true });
+        if (heroError) throw heroError;
+        if (heroData) setHeroSlides(heroData.map(formatDbHeroSlide));
       } catch (err) {
         console.error('Error fetching data from Supabase:', err.message);
         showToast('Connected but failed to fetch data from Supabase. Using mock data.', 'warning');
@@ -133,6 +170,26 @@ export function AppProvider({ children }) {
     };
 
     loadOrders();
+  }, [isAdminLoggedIn]);
+
+  // Inactive hero slides are hidden from the public RLS policy, so an admin
+  // session needs its own fetch to manage the full set, not just the live ones.
+  useEffect(() => {
+    if (!supabase || !isAdminLoggedIn) return;
+
+    const loadAllHeroSlides = async () => {
+      const { data, error } = await supabase
+        .from('de_hero_slides')
+        .select('*')
+        .order('sort_order', { ascending: true });
+      if (error) {
+        console.error('Error fetching hero slides from Supabase:', error.message);
+        return;
+      }
+      if (data) setHeroSlides(data.map(formatDbHeroSlide));
+    };
+
+    loadAllHeroSlides();
   }, [isAdminLoggedIn]);
 
   // Pending review moderation queue - same RLS gating as orders (the public
@@ -245,20 +302,18 @@ export function AppProvider({ children }) {
       try {
         const id = `p-${Date.now()}`;
         const newProductDb = {
+          ...toDbProductFields(product),
           id,
           sku: product.sku || `DE-${Date.now()}`,
-          name: product.name,
-          category_id: product.category || null,
           price: parseFloat(product.price),
           compare_price: product.comparePrice ? parseFloat(product.comparePrice) : null,
-          description: product.description,
           stock: parseInt(product.stock) || 0,
-          is_new: true,
-          is_featured: false,
-          is_bestseller: false,
-          colors: ['#0A0A0A'],
-          color_names: ['Default Jet Black'],
-          sizes: ['S', 'M', 'L', 'XL'],
+          is_new: product.isNew ?? true,
+          is_featured: product.isFeatured ?? false,
+          is_bestseller: product.isBestseller ?? false,
+          colors: product.colors?.length > 0 ? product.colors : ['#0A0A0A'],
+          color_names: product.colorNames?.length > 0 ? product.colorNames : ['Default Jet Black'],
+          sizes: product.sizes?.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL'],
           images: product.images?.length > 0 ? product.images : [DEFAULT_PRODUCT_IMAGE],
           rating: 5.0,
           review_count: 0
@@ -282,9 +337,12 @@ export function AppProvider({ children }) {
         id: `p-${Date.now()}`,
         sku: product.sku || `DE-${Date.now()}`,
         rating: 0, reviewCount: 0,
-        isNew: true, isFeatured: false, isBestseller: false,
+        isNew: product.isNew ?? true,
+        isFeatured: product.isFeatured ?? false,
+        isBestseller: product.isBestseller ?? false,
         images: product.images?.length > 0 ? product.images : [DEFAULT_PRODUCT_IMAGE],
-        colors: ['#1A1A1A'], colorNames: ['Default'],
+        colors: product.colors?.length > 0 ? product.colors : ['#1A1A1A'],
+        colorNames: product.colorNames?.length > 0 ? product.colorNames : ['Default'],
       };
       setProducts(prev => [newProduct, ...prev]);
       showToast(`"${product.name}" added successfully!`, 'success');
@@ -294,7 +352,7 @@ export function AppProvider({ children }) {
   const updateProduct = useCallback(async (id, updates) => {
     if (supabase) {
       try {
-        const dbUpdates = toDbProductUpdates(updates);
+        const dbUpdates = toDbProductFields(updates);
 
         const { error } = await supabase.from('de_products').update(dbUpdates).eq('id', id);
         if (error) throw error;
@@ -408,6 +466,114 @@ export function AppProvider({ children }) {
     }
   }, [categories, showToast]);
 
+  const addHeroSlide = useCallback(async (slide) => {
+    const sortOrder = heroSlides.length > 0 ? Math.max(...heroSlides.map(s => s.sortOrder ?? 0)) + 1 : 0;
+    if (supabase) {
+      try {
+        const id = `hero-${Date.now()}`;
+        const newSlide = {
+          id,
+          eyebrow: slide.eyebrow || '',
+          heading: slide.heading,
+          subheading: slide.subheading || '',
+          cta: slide.cta || '',
+          cta_secondary: slide.ctaSecondary || '',
+          image: slide.image || null,
+          sort_order: sortOrder,
+          is_active: slide.isActive ?? true,
+        };
+
+        const { error } = await supabase.from('de_hero_slides').insert([newSlide]);
+        if (error) throw error;
+
+        setHeroSlides(prev => [...prev, formatDbHeroSlide(newSlide)]);
+        showToast('Hero slide added!', 'success');
+      } catch (err) {
+        console.error('Error adding hero slide:', err.message);
+        showToast(`Failed to add hero slide: ${err.message}`, 'danger');
+      }
+    } else {
+      const newSlide = { ...slide, id: `hero-${Date.now()}`, sortOrder, isActive: slide.isActive ?? true };
+      setHeroSlides(prev => [...prev, newSlide]);
+      showToast('Hero slide added!', 'success');
+    }
+  }, [heroSlides, showToast]);
+
+  const updateHeroSlide = useCallback(async (id, updates) => {
+    if (supabase) {
+      try {
+        const dbUpdates = toDbHeroSlideFields(updates);
+        const { error } = await supabase.from('de_hero_slides').update(dbUpdates).eq('id', id);
+        if (error) throw error;
+
+        setHeroSlides(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+        showToast('Hero slide updated!', 'success');
+      } catch (err) {
+        console.error('Error updating hero slide:', err.message);
+        showToast(`Failed to update hero slide: ${err.message}`, 'danger');
+      }
+    } else {
+      setHeroSlides(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+      showToast('Hero slide updated!', 'success');
+    }
+  }, [showToast]);
+
+  const deleteHeroSlide = useCallback(async (id) => {
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('de_hero_slides').delete().eq('id', id);
+        if (error) throw error;
+
+        setHeroSlides(prev => prev.filter(s => s.id !== id));
+        showToast('Hero slide removed.', 'danger');
+      } catch (err) {
+        console.error('Error deleting hero slide:', err.message);
+        showToast(`Failed to delete hero slide: ${err.message}`, 'danger');
+      }
+    } else {
+      setHeroSlides(prev => prev.filter(s => s.id !== id));
+      showToast('Hero slide removed.', 'danger');
+    }
+  }, [showToast]);
+
+  // Swaps sort_order with the adjacent slide (by current array position) to
+  // move a slide up (-1) or down (+1) in the homepage carousel.
+  const reorderHeroSlide = useCallback(async (id, direction) => {
+    const sorted = [...heroSlides].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    const index = sorted.findIndex(s => s.id === id);
+    const targetIndex = index + direction;
+    if (index === -1 || targetIndex < 0 || targetIndex >= sorted.length) return;
+
+    const current = sorted[index];
+    const target = sorted[targetIndex];
+    const currentOrder = current.sortOrder ?? 0;
+    const targetOrder = target.sortOrder ?? 0;
+
+    if (supabase) {
+      try {
+        const { error: err1 } = await supabase.from('de_hero_slides').update({ sort_order: targetOrder }).eq('id', current.id);
+        if (err1) throw err1;
+        const { error: err2 } = await supabase.from('de_hero_slides').update({ sort_order: currentOrder }).eq('id', target.id);
+        if (err2) throw err2;
+
+        setHeroSlides(prev => prev.map(s => {
+          if (s.id === current.id) return { ...s, sortOrder: targetOrder };
+          if (s.id === target.id) return { ...s, sortOrder: currentOrder };
+          return s;
+        }));
+      } catch (err) {
+        console.error('Error reordering hero slides:', err.message);
+        showToast(`Failed to reorder: ${err.message}`, 'danger');
+      }
+    } else {
+      setHeroSlides(prev => prev.map(s => {
+        if (s.id === current.id) return { ...s, sortOrder: targetOrder };
+        if (s.id === target.id) return { ...s, sortOrder: currentOrder };
+        return s;
+      }));
+    }
+  }, [heroSlides, showToast]);
+
   // Public - any visitor can submit a review. RLS forces is_approved=false
   // on every public insert regardless of what's sent, so this can't be used
   // to skip moderation even by a malicious direct API call.
@@ -513,23 +679,14 @@ export function AppProvider({ children }) {
 
   const isInWishlist = useCallback((id) => wishlist.some(p => p.id === id), [wishlist]);
 
-  // Currency State and Helpers
-  const [currency, setCurrency] = useState('USD');
-
-  const currencies = {
-    USD: { symbol: '$', rate: 1.0, label: 'USD' },
-    GHS: { symbol: 'GH₵ ', rate: 15.20, label: 'GHS' },
-    EUR: { symbol: '€', rate: 0.92, label: 'EUR' },
-    GBP: { symbol: '£', rate: 0.78, label: 'GBP' }
-  };
-
+  // Store operates in USD only - no multi-currency conversion.
   const formatPrice = useCallback((priceInUsd) => {
-    const cur = currencies[currency] || currencies.USD;
-    const converted = (priceInUsd || 0) * cur.rate;
-    return `${cur.symbol}${converted.toFixed(2)}`;
-  }, [currency]);
+    return `$${(priceInUsd || 0).toFixed(2)}`;
+  }, []);
 
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  const sortedHeroSlides = [...heroSlides].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
   const filteredProducts = products.filter(p => {
     const matchCat = activeCategory === 'all' || p.category === activeCategory;
@@ -548,9 +705,10 @@ export function AppProvider({ children }) {
       filteredProducts, showToast,
       addProduct, updateProduct, deleteProduct, uploadProductImages,
       addCategory, updateCategory, deleteCategory,
+      heroSlides: sortedHeroSlides, addHeroSlide, updateHeroSlide, deleteHeroSlide, reorderHeroSlide,
       addToCart, toggleWishlist, isInWishlist,
       removeFromCart, updateCartQty, clearCart,
-      currency, setCurrency, currencies, formatPrice,
+      formatPrice,
       isCartOpen, setIsCartOpen,
       isWishlistOpen, setIsWishlistOpen,
     }}>

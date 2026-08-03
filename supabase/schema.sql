@@ -49,7 +49,21 @@ create table public.de_testimonials (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 4. ORDERS TABLE (For checkout logging)
+-- 4. HERO SLIDES TABLE (homepage carousel, admin-managed)
+create table public.de_hero_slides (
+  id text primary key,
+  eyebrow text,
+  heading text not null,
+  subheading text,
+  cta text,
+  cta_secondary text,
+  image text,
+  sort_order integer default 0 not null,
+  is_active boolean default true not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 5. ORDERS TABLE (For checkout logging)
 create table public.de_orders (
   id uuid default gen_random_uuid() primary key,
   order_number text unique not null,
@@ -73,6 +87,7 @@ create table public.de_orders (
 alter table public.de_categories enable row level security;
 alter table public.de_products enable row level security;
 alter table public.de_testimonials enable row level security;
+alter table public.de_hero_slides enable row level security;
 alter table public.de_orders enable row level security;
 
 -- Categories Policies
@@ -112,6 +127,19 @@ create policy "Allow public insert of unapproved testimonials"
 
 create policy "Allow authenticated admin full access to testimonials"
   on public.de_testimonials for all
+  to authenticated
+  using (true)
+  with check (true);
+
+-- Hero Slides Policies
+-- Public only ever sees active slides - inactive ones stay editable in
+-- draft without going live on the storefront.
+create policy "Allow public read access to active hero slides"
+  on public.de_hero_slides for select
+  using (is_active = true);
+
+create policy "Allow authenticated admin full access to hero slides"
+  on public.de_hero_slides for all
   to authenticated
   using (true)
   with check (true);
@@ -172,6 +200,12 @@ insert into public.de_categories (id, name, slug, description, image) values
 ('cat-2', 'Essentials', 'essentials', 'Premium basics engineered for everyday luxury.', '/products/tee-white-back.jpg'),
 ('cat-3', 'Limited Edition', 'limited-edition', 'Exclusive drops with limited-run designs.', '/products/tee-black-girl-garden.jpg'),
 ('cat-4', 'Accessories', 'accessories', 'The details that define your look.', '/products/tee-black-duo-girls.jpg');
+
+-- Insert Hero Slides
+insert into public.de_hero_slides (id, eyebrow, heading, subheading, cta, cta_secondary, image, sort_order, is_active) values
+('hero-1', 'New Arrival — SS26', 'DEFINE YOUR' || chr(10) || 'CREATIVE', 'Premium streetwear engineered for the bold. Made in Africa, worn by the world.', 'Shop Collection', 'Explore Lookbook', '/products/tee-black-girl-palm.jpg', 0, true),
+('hero-2', 'Limited Edition Drop', 'WALK BY' || chr(10) || 'FAITH', 'The iconic white tee. Only 150 pieces. Own a piece of history.', 'Get Yours Now', 'View Details', '/products/tee-white-back.jpg', 1, true),
+('hero-3', 'The DE Creatives Look', 'WEAR THE' || chr(10) || 'CULTURE', 'Bold prints, premium cotton, zero compromise. This is DE Creatives.', 'Shop Now', 'See Lookbook', '/products/tee-black-duo-girls.jpg', 2, true);
 
 -- Insert Products
 insert into public.de_products (id, sku, name, category_id, price, compare_price, description, colors, color_names, sizes, stock, is_new, is_featured, is_bestseller, rating, review_count, images) values

@@ -13,8 +13,6 @@ export default function CartDrawer() {
     updateCartQty,
     clearCart,
     formatPrice,
-    currency,
-    currencies,
     showToast,
   } = useApp();
 
@@ -104,7 +102,7 @@ export default function CartDrawer() {
 
     const totalText = formatPrice(placedOrder.total);
 
-    const message = `Hello DE Creatives! I just placed an order on your site.\n\n*Order ID:* ${placedOrder.id}\n*Customer:* ${placedOrder.customer_name}\n*Total:* ${totalText} (${currency})\n*Payment Method:* ${placedOrder.payment_method === 'momo' ? 'Mobile Money (MoMo)' : 'Cash on Delivery'}\n\n*Items:*\n${itemsText}\n\n*Delivery Address:*\n${placedOrder.shipping_address}`;
+    const message = `Hello DE Creatives! I just placed an order on your site.\n\n*Order ID:* ${placedOrder.id}\n*Customer:* ${placedOrder.customer_name}\n*Total:* ${totalText} (USD)\n*Payment Method:* ${placedOrder.payment_method === 'momo' ? 'Mobile Money (MoMo)' : 'Cash on Delivery'}\n\n*Items:*\n${itemsText}\n\n*Delivery Address:*\n${placedOrder.shipping_address}`;
 
     const encodedMessage = encodeURIComponent(message);
     // WhatsApp redirect to business representative number (e.g. +233532391663 or similar)
