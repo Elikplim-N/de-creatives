@@ -108,7 +108,7 @@ export default function Gallery() {
                 </p>
               </div>
               <a
-                href={`https://wa.me/233532391663?text=${encodeURIComponent(`Hello DE Creatives! I saw this photo on your gallery and would like to inquire about ordering: ${activePhoto.title}`)}`}
+                href={`https://wa.me/233595515040?text=${encodeURIComponent(`Hello DE Creatives! I saw this photo on your gallery and would like to inquire about ordering: ${activePhoto.title}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn btn-primary btn-sm"

@@ -52,7 +52,7 @@ export default function CartDrawer() {
     const message = `Hello DE Creatives! 🇬🇭✨\n\nI would like to place an order from your online store:\n\n*Order Items:*\n${itemsText}\n\n*Total:* ${totalText}\n*Delivery:* FREE Shipping\n\nPlease share your MoMo payment details and delivery timeframe. Thank you!`;
 
     const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/233532391663?text=${encodedMessage}`, '_blank');
+    window.open(`https://wa.me/233595515040?text=${encodedMessage}`, '_blank');
   };
 
   const handleCheckoutSubmit = async (e) => {
@@ -115,7 +115,7 @@ export default function CartDrawer() {
     const message = `Hello DE Creatives! I just placed an order on your site.\n\n*Order Ref:* #${placedOrder.id}\n*Customer:* ${placedOrder.customer_name}\n*Total:* ${totalText}\n*Payment Method:* ${placedOrder.payment_method === 'momo' ? 'Mobile Money (MoMo)' : 'Cash on Delivery'}\n\n*Items:*\n${itemsText}\n\n*Delivery Address:*\n${placedOrder.shipping_address}`;
 
     const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/233532391663?text=${encodedMessage}`, '_blank');
+    window.open(`https://wa.me/233595515040?text=${encodedMessage}`, '_blank');
   };
 
   const closeDrawer = () => {
@@ -343,7 +343,7 @@ export default function CartDrawer() {
                 <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-subtle)', padding: '16px', borderRadius: '6px', textAlign: 'left', marginBottom: '1.5rem' }}>
                   <h4 style={{ fontFamily: 'var(--font-accent)', fontSize: '0.78rem', letterSpacing: '0.05em', color: 'var(--white)', margin: '0 0 10px 0', textTransform: 'uppercase' }}>MTN Mobile Money Instructions</h4>
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0 0 6px 0', lineHeight: 1.4 }}>
-                    • Send MoMo to: <strong>053 239 1663</strong>
+                    • Send MoMo to: <strong>059 551 5040</strong>
                   </p>
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: '0 0 6px 0', lineHeight: 1.4 }}>
                     • Registered Name: <strong>DE Creatives</strong>

@@ -111,6 +111,24 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="navbar__mobile-divider" />
+          <a
+            href="https://wa.me/233595515040"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="navbar__mobile-link"
+            style={{ color: '#25D366' }}
+          >
+            WhatsApp Support (+233 59 551 5040)
+          </a>
+          <a
+            href="https://instagram.com/de_creatives_tees"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="navbar__mobile-link"
+          >
+            Instagram (@de_creatives_tees)
+          </a>
+          <div className="navbar__mobile-divider" />
           <Link to="/admin/login" className="navbar__mobile-link navbar__mobile-admin">
             Admin Portal →
           </Link>

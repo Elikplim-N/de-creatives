@@ -120,7 +120,7 @@ export default function Footer() {
             <Link to="/shop" className="footer__nav-link">Shop</Link>
             <Link to="/manifesto" className="footer__nav-link">Manifesto</Link>
             <a
-              href="https://wa.me/233532391663"
+              href="https://wa.me/233595515040"
               target="_blank"
               rel="noopener noreferrer"
               className="footer__nav-link"
@@ -128,7 +128,14 @@ export default function Footer() {
             >
               WhatsApp Support
             </a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="footer__nav-link">Instagram</a>
+            <a
+              href="https://instagram.com/de_creatives_tees"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="footer__nav-link"
+            >
+              @de_creatives_tees
+            </a>
           </nav>
 
           {/* Copyright & Admin Portal */}

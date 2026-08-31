@@ -64,7 +64,7 @@ export default function ProductDetail() {
     const message = `Hello DE Creatives! 🇬🇭✨\n\nI want to order this item:\n\n*Product:* ${product.name}\n*Style / Cut:* ${selectedFit} (${formatPrice(currentUnitPrice)})\n*Size:* ${selectedSize}\n*Color:* ${chosenColorName}\n*Quantity:* ${qty}\n*Total:* ${totalAmount}\n*Delivery:* Free Delivery\n\nPlease let me know the MoMo payment details so I can proceed!`;
 
     const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/233532391663?text=${encoded}`, '_blank');
+    window.open(`https://wa.me/233595515040?text=${encoded}`, '_blank');
   };
 
   return (
