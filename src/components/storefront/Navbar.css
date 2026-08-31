@@ -203,7 +203,7 @@
   transition: max-height var(--transition-slow), padding var(--transition-slow);
 }
 .navbar__mobile--open {
-  max-height: 400px;
+  max-height: 520px;
   padding: var(--space-6) 0;
 }
 .navbar__mobile-links {

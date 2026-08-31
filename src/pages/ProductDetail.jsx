@@ -61,7 +61,7 @@ export default function ProductDetail() {
     const chosenColorName = colorNames[selectedColor] || 'Default';
     const totalAmount = formatPrice(currentUnitPrice * qty);
 
-    const message = `Hello DE Creatives! 🇬🇭✨\n\nI want to order this item:\n\n*Product:* ${product.name}\n*Style / Cut:* ${selectedFit} (${formatPrice(currentUnitPrice)})\n*Size:* ${selectedSize}\n*Color:* ${chosenColorName}\n*Quantity:* ${qty}\n*Total:* ${totalAmount}\n*Delivery:* Free Delivery\n\nPlease let me know the MoMo payment details so I can proceed!`;
+    const message = `Hello DE Creatives! 🇬🇭✨\n\nI want to order this item:\n\n*Product:* ${product.name}\n*Style / Cut:* ${selectedFit} (${formatPrice(currentUnitPrice)})\n*Size:* ${selectedSize}\n*Color:* ${chosenColorName}\n*Quantity:* ${qty}\n*Total:* ${totalAmount}\n\nPlease confirm availability and payment details so I can proceed!`;
 
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/233595515040?text=${encoded}`, '_blank');
@@ -114,7 +114,6 @@ export default function ProductDetail() {
               <div className="product-detail__category-label">
                 <span className="badge badge-neutral">{product.categoryName}</span>
                 {product.isBestseller && <span className="badge badge-turquoise">Bestseller</span>}
-                <span className="badge badge-success" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e' }}>Free Delivery</span>
               </div>
 
               <h1 className="product-detail__name">{product.name}</h1>
@@ -267,13 +266,16 @@ export default function ProductDetail() {
                     gap: '10px',
                     borderColor: '#25D366',
                     color: '#25D366',
-                    background: 'rgba(37, 211, 102, 0.05)'
+                    background: 'rgba(37, 211, 102, 0.05)',
+                    padding: '14px 20px',
+                    fontSize: '1rem',
+                    fontWeight: 600
                   }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.324 5.328 0 11.859 0c3.161.001 6.132 1.233 8.368 3.472 2.235 2.24 3.461 5.215 3.46 8.378-.003 6.536-5.328 11.86-11.859 11.86-2.007-.001-3.98-.513-5.736-1.489L0 24zm6.59-4.846c1.666.988 3.311 1.485 5.26 1.486 5.417 0 9.825-4.414 9.827-9.836.001-2.627-1.02-5.1-2.874-6.958C16.99 1.888 14.5.86 11.862.86c-5.42 0-9.829 4.415-9.831 9.837-.001 1.887.493 3.73 1.427 5.33L2.454 21.5l5.59-1.465zM17.15 14.4c-.29-.145-1.713-.846-1.978-.942-.265-.096-.458-.145-.65.145-.193.29-.747.942-.916 1.132-.169.19-.338.212-.627.067-.29-.145-1.22-.45-2.325-1.434-.86-.767-1.44-1.714-1.61-2.004-.168-.29-.018-.446.126-.59.13-.13.29-.338.434-.508.145-.17.193-.29.29-.483.096-.19.048-.36-.024-.506-.072-.145-.65-1.568-.89-2.146-.233-.563-.47-.487-.65-.496-.168-.008-.362-.01-.555-.01-.193 0-.506.072-.77.36-.266.29-1.013.99-1.013 2.413 0 1.42 1.037 2.793 1.18 2.987.145.195 2.04 3.115 4.94 4.37.69.298 1.229.477 1.65.612.693.22 1.324.19 1.823.115.556-.08 1.713-.7 1.953-1.375.24-.675.24-1.255.17-1.375-.07-.12-.266-.19-.556-.335z"/>
                   </svg>
-                  Order via WhatsApp Directly
+                  Text to Order (WhatsApp)
                 </button>
               </div>
 
@@ -296,7 +298,7 @@ export default function ProductDetail() {
                     role="tab"
                     aria-selected={activeTab === 'shipping'}
                   >
-                    Shipping & MoMo
+                    Order & MoMo
                   </button>
                   <button
                     className={`product-detail__tab-btn${activeTab === 'sizing' ? ' active' : ''}`}
@@ -317,9 +319,9 @@ export default function ProductDetail() {
                   )}
                   {activeTab === 'shipping' && (
                     <div className="product-detail__tab-pane">
-                      <p className="product-detail__description"><strong>🚚 Free Delivery:</strong> Standard delivery is free on all orders across Ghana.</p>
-                      <p className="product-detail__description" style={{ marginTop: '0.5rem' }}><strong>📱 Mobile Money:</strong> Pay easily with MTN Mobile Money (MoMo), Telecel Cash, or Cash on Delivery.</p>
-                      <p className="product-detail__description" style={{ marginTop: '0.5rem' }}><strong>⚡ Dispatch:</strong> 24 to 48-hour delivery in Accra & major cities.</p>
+                      <p className="product-detail__description"><strong>🚚 Fast Dispatch:</strong> Orders are dispatched within 24 to 48 hours in Accra & nationwide.</p>
+                      <p className="product-detail__description" style={{ marginTop: '0.5rem' }}><strong>📱 Mobile Money:</strong> Pay easily via MTN Mobile Money (MoMo) or Telecel Cash.</p>
+                      <p className="product-detail__description" style={{ marginTop: '0.5rem' }}><strong>💬 Direct Ordering:</strong> Tap "Text to Order (WhatsApp)" to place your order directly.</p>
                     </div>
                   )}
                   {activeTab === 'sizing' && (
