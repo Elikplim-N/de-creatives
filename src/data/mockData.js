@@ -183,6 +183,12 @@ export const testimonials = [
   },
 ];
 
+export const subscribers = [
+  { id: 'sub-1', email: 'kwame.mensah@gmail.com', type: 'all', created_at: new Date(Date.now() - 86400000 * 5).toISOString() },
+  { id: 'sub-2', email: 'afia.creatives@outlook.com', type: 'promotions', created_at: new Date(Date.now() - 86400000 * 3).toISOString() },
+  { id: 'sub-3', email: 'kofi.streetwear@yahoo.com', type: 'newsletter', created_at: new Date(Date.now() - 86400000).toISOString() },
+];
+
 // Dev-only fallback login, used solely when no Supabase backend is configured
 // (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY unset). Never consulted once a
 // real backend is live — see adminLogin in AppContext.jsx.

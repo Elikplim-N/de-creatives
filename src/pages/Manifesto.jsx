@@ -20,7 +20,7 @@ export default function Manifesto() {
           <div className="manifesto-hero__content container">
             <p className="manifesto-hero__brand animate-fade-up">DE Creatives</p>
             <h1 className="manifesto-hero__title animate-fade-up animate-delay-1">Manifesto</h1>
-            <p className="manifesto-hero__tagline animate-fade-up animate-delay-2">Wear Your Identity</p>
+            <p className="manifesto-hero__tagline animate-fade-up animate-delay-2">God × Health × GOOD vibes</p>
           </div>
         </section>
 
@@ -74,6 +74,9 @@ export default function Manifesto() {
         <section className="manifesto-cta">
           <div className="container">
             <p className="manifesto-cta__sub">The Collection</p>
+            <h3 style={{ fontFamily: 'var(--font-accent)', fontSize: 'clamp(1.3rem, 3.5vw, 1.9rem)', color: 'var(--turquoise)', letterSpacing: '0.08em', textTransform: 'uppercase', margin: '0.5rem 0 1rem 0' }}>
+              God × Health × GOOD vibes
+            </h3>
             <p className="manifesto-cta__text">
               Garments rooted in culture. Crafted to be worn with purpose.
             </p>

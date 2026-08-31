@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import './ProductCard.css';
@@ -13,12 +14,14 @@ export default function ProductCard({ product }) {
   const images = product.images || [];
   const colors = product.colors || [];
   const colorNames = product.colorNames || [];
-  const sizes = product.sizes || [];
+  const sizes = product.sizes || ['S', 'M', 'L', 'XL'];
+
+  const [activeColorIdx, setActiveColorIdx] = useState(0);
 
   const handleQuickAdd = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product, sizes[0] || 'M', colors[0] || '#0A0A0A');
+    addToCart(product, sizes[0] || 'M', colors[activeColorIdx] || '#0A0A0A', 'Regular Fit', product.price);
   };
 
   const handleWishlist = (e) => {
@@ -27,18 +30,27 @@ export default function ProductCard({ product }) {
     toggleWishlist(product);
   };
 
+  const handleColorClick = (e, idx) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setActiveColorIdx(idx);
+  };
+
+  const displayImage = images[activeColorIdx] || images[0] || '/logo.png';
+  const hoverImage = images[1] && activeColorIdx === 0 ? images[1] : null;
+
   return (
     <article className="product-card">
       <Link to={`/product/${product.id}`} className="product-card__image-wrap" aria-label={`View ${product.name}`}>
         <img
-          src={images[0] || '/logo.png'}
+          src={displayImage}
           alt={product.name}
           className="product-card__image product-card__image--front"
           loading="lazy"
         />
-        {images[1] && (
+        {hoverImage && (
           <img
-            src={images[1]}
+            src={hoverImage}
             alt={`${product.name} alternate view`}
             className="product-card__image product-card__image--back"
             loading="lazy"
@@ -102,12 +114,18 @@ export default function ProductCard({ product }) {
           {/* Color swatches */}
           <div className="product-card__colors">
             {colors.slice(0, 4).map((color, i) => (
-              <span
+              <button
                 key={i}
-                className="product-card__swatch"
-                style={{ background: color }}
+                type="button"
+                className={`product-card__swatch${activeColorIdx === i ? ' product-card__swatch--active' : ''}`}
+                style={{
+                  background: color,
+                  border: activeColorIdx === i ? '2px solid var(--turquoise)' : '1px solid var(--border-subtle)',
+                  padding: 0,
+                  cursor: 'pointer'
+                }}
                 title={colorNames[i] || 'Color'}
-                role="img"
+                onClick={(e) => handleColorClick(e, i)}
                 aria-label={colorNames[i] || 'Color'}
               />
             ))}

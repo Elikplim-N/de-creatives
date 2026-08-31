@@ -30,7 +30,7 @@ export default function CartDrawer() {
   if (!isCartOpen) return null;
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price || 0) * item.qty, 0);
-  const shipping = subtotal >= 150 ? 0 : 15;
+  const shipping = 0; // Free delivery on all orders
   const total = subtotal + shipping;
 
   const handleQtyChange = (item, newQty) => {
@@ -40,6 +40,19 @@ export default function CartDrawer() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleDirectWhatsAppOrder = () => {
+    if (cart.length === 0) return;
+    const itemsText = cart
+      .map(item => `• ${item.name} (Size: ${item.size} | Color: ${item.color} | Fit: ${item.fit || 'Regular Fit'}) x${item.qty} — ${formatPrice(item.price * item.qty)}`)
+      .join('\n');
+
+    const totalText = formatPrice(total);
+    const message = `Hello DE Creatives! 🇬🇭✨\n\nI would like to place an order from your online store:\n\n*Order Items:*\n${itemsText}\n\n*Total:* ${totalText}\n*Delivery:* FREE Shipping\n\nPlease share your MoMo payment details and delivery timeframe. Thank you!`;
+
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/233532391663?text=${encodedMessage}`, '_blank');
   };
 
   const handleCheckoutSubmit = async (e) => {
@@ -52,9 +65,6 @@ export default function CartDrawer() {
     setLoading(true);
     const orderId = `ord-${Date.now().toString().slice(-6)}`;
     try {
-      // Prepare order structure. `id` is left for Postgres to generate
-      // (uuid primary key) - order_number is the human-readable reference
-      // shown to the customer and sent over WhatsApp.
       const orderData = {
         order_number: orderId,
         customer_email: formData.email,
@@ -65,11 +75,12 @@ export default function CartDrawer() {
           name: item.name,
           size: item.size,
           color: item.color,
+          fit: item.fit || 'Regular Fit',
           qty: item.qty,
           price: item.price
         })),
         subtotal: parseFloat(subtotal.toFixed(2)),
-        shipping: parseFloat(shipping.toFixed(2)),
+        shipping: 0,
         total: parseFloat(total.toFixed(2)),
         payment_method: paymentMethod,
         status: 'pending'
@@ -95,17 +106,15 @@ export default function CartDrawer() {
   const handleWhatsAppRedirect = () => {
     if (!placedOrder) return;
 
-    // Convert items details to a clean readable list
     const itemsText = placedOrder.items
-      .map(item => `• ${item.name} (${item.size} / ${item.color}) x${item.qty}`)
+      .map(item => `• ${item.name} (${item.size} / ${item.color}${item.fit ? ` / ${item.fit}` : ''}) x${item.qty}`)
       .join('\n');
 
     const totalText = formatPrice(placedOrder.total);
 
-    const message = `Hello DE Creatives! I just placed an order on your site.\n\n*Order ID:* ${placedOrder.id}\n*Customer:* ${placedOrder.customer_name}\n*Total:* ${totalText} (USD)\n*Payment Method:* ${placedOrder.payment_method === 'momo' ? 'Mobile Money (MoMo)' : 'Cash on Delivery'}\n\n*Items:*\n${itemsText}\n\n*Delivery Address:*\n${placedOrder.shipping_address}`;
+    const message = `Hello DE Creatives! I just placed an order on your site.\n\n*Order Ref:* #${placedOrder.id}\n*Customer:* ${placedOrder.customer_name}\n*Total:* ${totalText}\n*Payment Method:* ${placedOrder.payment_method === 'momo' ? 'Mobile Money (MoMo)' : 'Cash on Delivery'}\n\n*Items:*\n${itemsText}\n\n*Delivery Address:*\n${placedOrder.shipping_address}`;
 
     const encodedMessage = encodeURIComponent(message);
-    // WhatsApp redirect to business representative number (e.g. +233532391663 or similar)
     window.open(`https://wa.me/233532391663?text=${encodedMessage}`, '_blank');
   };
 
@@ -167,6 +176,11 @@ export default function CartDrawer() {
                             <span className="cart-drawer__attr-tag">
                               Color: <span className="cart-drawer__color-dot" style={{ background: item.color }} />
                             </span>
+                            {item.fit && (
+                              <span className="cart-drawer__attr-tag" style={{ color: item.fit.includes('Drop') ? 'var(--turquoise)' : undefined }}>
+                                {item.fit}
+                              </span>
+                            )}
                           </div>
                           <div className="cart-drawer__item-controls">
                             <div className="cart-drawer__qty-selector">
@@ -377,16 +391,30 @@ export default function CartDrawer() {
             </div>
             <div className="cart-drawer__summary-row">
               <span className="cart-drawer__summary-label">Shipping</span>
-              <span className="cart-drawer__summary-val">{shipping === 0 ? 'FREE' : formatPrice(shipping)}</span>
+              <span className="cart-drawer__summary-val" style={{ color: 'var(--success)', fontWeight: 600 }}>FREE DELIVERY</span>
             </div>
             <div className="cart-drawer__summary-total">
-              <span>Total Estim.</span>
+              <span>Total Amount</span>
               <span>{formatPrice(total)}</span>
             </div>
-            <button className="btn btn-primary btn-lg cart-drawer__checkout-btn" onClick={() => setCheckoutStep('checkout')}>
-              Proceed to Checkout
-            </button>
-            <p className="cart-drawer__footer-note">Free standard shipping on orders above $150. Easy returns.</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                className="btn btn-primary btn-lg cart-drawer__checkout-btn"
+                onClick={handleDirectWhatsAppOrder}
+                style={{ background: '#25D366', borderColor: '#25D366', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.324 5.328 0 11.859 0c3.161.001 6.132 1.233 8.368 3.472 2.235 2.24 3.461 5.215 3.46 8.378-.003 6.536-5.328 11.86-11.859 11.86-2.007-.001-3.98-.513-5.736-1.489L0 24zm6.59-4.846c1.666.988 3.311 1.485 5.26 1.486 5.417 0 9.825-4.414 9.827-9.836.001-2.627-1.02-5.1-2.874-6.958C16.99 1.888 14.5.86 11.862.86c-5.42 0-9.829 4.415-9.831 9.837-.001 1.887.493 3.73 1.427 5.33L2.454 21.5l5.59-1.465zM17.15 14.4c-.29-.145-1.713-.846-1.978-.942-.265-.096-.458-.145-.65.145-.193.29-.747.942-.916 1.132-.169.19-.338.212-.627.067-.29-.145-1.22-.45-2.325-1.434-.86-.767-1.44-1.714-1.61-2.004-.168-.29-.018-.446.126-.59.13-.13.29-.338.434-.508.145-.17.193-.29.29-.483.096-.19.048-.36-.024-.506-.072-.145-.65-1.568-.89-2.146-.233-.563-.47-.487-.65-.496-.168-.008-.362-.01-.555-.01-.193 0-.506.072-.77.36-.266.29-1.013.99-1.013 2.413 0 1.42 1.037 2.793 1.18 2.987.145.195 2.04 3.115 4.94 4.37.69.298 1.229.477 1.65.612.693.22 1.324.19 1.823.115.556-.08 1.713-.7 1.953-1.375.24-.675.24-1.255.17-1.375-.07-.12-.266-.19-.556-.335z"/>
+                </svg>
+                Order Direct via WhatsApp
+              </button>
+
+              <button className="btn btn-outline btn-lg cart-drawer__checkout-btn" onClick={() => setCheckoutStep('checkout')}>
+                Proceed to Web Checkout / MoMo
+              </button>
+            </div>
+            <p className="cart-drawer__footer-note">Free standard delivery across Ghana on all orders.</p>
           </div>
         )}
       </div>

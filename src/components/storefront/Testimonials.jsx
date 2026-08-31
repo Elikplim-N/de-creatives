@@ -76,9 +76,11 @@ export default function Testimonials() {
     <section className="testimonials" id="reviews" aria-label="Customer testimonials">
       <div className="container">
         <div className="testimonials__header">
-          <p className="section-label">Social Proof</p>
+          <p className="section-label" style={{ color: 'var(--turquoise)', letterSpacing: '0.15em', fontWeight: 600 }}>
+            THE GOOD REPORT
+          </p>
           <h2 className="section-heading" style={{ marginTop: '0.5rem' }}>
-            WHAT THEY <span style={{ color: 'var(--turquoise)' }}>SAY</span>
+            TESTIMONIES & <span style={{ color: 'var(--turquoise)' }}>REVIEWS</span>
           </h2>
         </div>
 
@@ -86,12 +88,12 @@ export default function Testimonials() {
           <div className="testimonials__grid">
             {testimonials.map((t, i) => (
               <article
-                key={t.id}
+                key={t.id || i}
                 className="testimonials__card animate-fade-up"
                 style={{ animationDelay: `${i * 0.15}s` }}
               >
                 <div className="testimonials__stars">
-                  {'★'.repeat(t.rating)}
+                  {'★'.repeat(t.rating || 5)}
                 </div>
                 <blockquote className="testimonials__quote">"{t.text}"</blockquote>
                 <footer className="testimonials__author">
@@ -110,7 +112,7 @@ export default function Testimonials() {
           </div>
         ) : (
           <div className="testimonials__empty">
-            <p>No reviews yet — be the first to share your experience.</p>
+            <p>No reports submitted yet — be the first to share your experience with the clan.</p>
           </div>
         )}
 
@@ -119,7 +121,7 @@ export default function Testimonials() {
             <ReviewForm onDone={() => setShowForm(false)} />
           ) : (
             <button className="btn btn-outline" onClick={() => setShowForm(true)}>
-              Leave a Review
+              ✦ Share a Good Report
             </button>
           )}
         </div>

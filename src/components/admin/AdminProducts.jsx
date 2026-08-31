@@ -13,7 +13,7 @@ const emptyForm = {
 };
 
 export default function AdminProducts() {
-  const { products, categories, addProduct, deleteProduct, updateProduct, uploadProductImages } = useApp();
+  const { products, categories, addProduct, deleteProduct, updateProduct, uploadProductImages, formatPrice } = useApp();
   // Category is optional - products can be added as Uncategorized and sorted
   // into categories later, so the form must never default to (or require) an
   // id that doesn't actually exist in the database.
@@ -196,11 +196,11 @@ export default function AdminProducts() {
                 <input id="prod-sku" name="sku" type="text" className="form-input" placeholder="e.g. DE-SW-010" value={form.sku} onChange={handleChange} />
               </div>
               <div className="form-group">
-                <label htmlFor="prod-price" className="form-label">Price (USD) *</label>
+                <label htmlFor="prod-price" className="form-label">Price (GH₵) *</label>
                 <input id="prod-price" name="price" type="number" min="0" step="0.01" className="form-input" placeholder="0.00" value={form.price} onChange={handleChange} required />
               </div>
               <div className="form-group">
-                <label htmlFor="prod-compare" className="form-label">Compare Price (USD)</label>
+                <label htmlFor="prod-compare" className="form-label">Compare Price (GH₵)</label>
                 <input id="prod-compare" name="comparePrice" type="number" min="0" step="0.01" className="form-input" placeholder="0.00 (optional)" value={form.comparePrice} onChange={handleChange} />
               </div>
               <div className="form-group">
@@ -329,8 +329,8 @@ export default function AdminProducts() {
                   </td>
                   <td><span className="badge badge-neutral">{p.categoryName}</span></td>
                   <td style={{ fontFamily: 'var(--font-accent)', fontWeight: 700, color: 'var(--white)' }}>
-                    ${p.price.toFixed(2)}
-                    {p.comparePrice && <del style={{ marginLeft: '6px', color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.8rem' }}>${p.comparePrice.toFixed(2)}</del>}
+                    {formatPrice(p.price)}
+                    {p.comparePrice && <del style={{ marginLeft: '6px', color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.8rem' }}>{formatPrice(p.comparePrice)}</del>}
                   </td>
                   <td style={{ fontFamily: 'var(--font-accent)', fontSize: '0.875rem', color: p.stock <= 15 ? 'var(--warning)' : 'var(--text-secondary)' }}>
                     {p.stock} units

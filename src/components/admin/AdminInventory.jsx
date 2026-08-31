@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import './AdminOverview.css';
 
 export default function AdminInventory() {
-  const { products, updateProduct } = useApp();
+  const { products, updateProduct, formatPrice } = useApp();
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [filter, setFilter] = useState('all');
@@ -116,7 +116,7 @@ export default function AdminInventory() {
                     </td>
                     <td><code style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: 'var(--text-muted)', background: 'var(--white-05)', padding: '2px 8px', borderRadius: '4px' }}>{p.sku}</code></td>
                     <td><span className="badge badge-neutral">{p.categoryName}</span></td>
-                    <td style={{ fontFamily: 'var(--font-accent)', fontWeight: 700, color: 'var(--white)' }}>${p.price.toFixed(2)}</td>
+                    <td style={{ fontFamily: 'var(--font-accent)', fontWeight: 700, color: 'var(--white)' }}>{formatPrice(p.price)}</td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div className="admin-inventory__stock-bar-wrap">

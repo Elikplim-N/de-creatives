@@ -13,7 +13,7 @@ function LoadingScreen({ onDone }) {
       <div className="loading-progress">
         <div className="loading-progress-bar" />
       </div>
-      <span className="loading-tagline">Premium Fashion · Est. 2024</span>
+      <span className="loading-tagline">God × Health × GOOD vibes</span>
     </div>
   );
 }

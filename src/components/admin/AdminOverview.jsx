@@ -94,7 +94,7 @@ export default function AdminOverview() {
                   </td>
                   <td><span className="badge badge-neutral">{p.categoryName}</span></td>
                   <td style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-accent)', fontWeight: 600 }}>
-                    ${p.price.toFixed(2)}
+                    {formatPrice(p.price)}
                   </td>
                   <td>
                     <span className={`badge ${p.stock <= 15 ? 'badge-warning' : p.stock <= 5 ? 'badge-danger' : 'badge-success'}`}>

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { products as initialProducts, categories as initialCategories, testimonials as initialTestimonials, heroSlides as initialHeroSlides, adminCredentials } from '../data/mockData';
+import { products as initialProducts, categories as initialCategories, testimonials as initialTestimonials, heroSlides as initialHeroSlides, subscribers as initialSubscribers, adminCredentials } from '../data/mockData';
 import { supabase } from '../lib/supabaseClient';
 
 const AppContext = createContext(null);
@@ -89,6 +89,10 @@ export function AppProvider({ children }) {
   const [categories, setCategories] = useState(initialCategories);
   const [orders, setOrders] = useState([]);
   const [testimonials, setTestimonials] = useState(initialTestimonials);
+  const [subscribers, setSubscribers] = useState(() => {
+    const saved = localStorage.getItem('de_subscribers');
+    return saved ? JSON.parse(saved) : initialSubscribers;
+  });
   const [heroSlides, setHeroSlides] = useState(initialHeroSlides);
   const [pendingTestimonials, setPendingTestimonials] = useState([]);
   const [cart, setCart] = useState([]);
@@ -124,25 +128,41 @@ export function AppProvider({ children }) {
           setProducts(prodData.map(p => formatDbProduct(p, catData)));
         }
 
-        // Fetch approved Testimonials from de_testimonials (RLS hides
-        // pending/rejected ones from anonymous visitors already, but order
-        // + limit keep the storefront section tidy).
+        // Fetch approved Testimonials from de_testimonials.
+        // If the DB has 0 approved testimonials, keep the curated initialTestimonials
+        // so the Good Report section is never left blank.
         const { data: testData, error: testError } = await supabase
           .from('de_testimonials')
           .select('*')
           .order('created_at', { ascending: false })
           .limit(9);
         if (testError) throw testError;
-        if (testData) setTestimonials(testData);
+        if (testData && testData.length > 0) {
+          setTestimonials(testData);
+        } else {
+          setTestimonials(initialTestimonials);
+        }
 
-        // Fetch Hero Slides from de_hero_slides (anon RLS returns active
-        // ones only; an admin session refetches the full set separately)
+        // Fetch Hero Slides from de_hero_slides
         const { data: heroData, error: heroError } = await supabase
           .from('de_hero_slides')
           .select('*')
           .order('sort_order', { ascending: true });
         if (heroError) throw heroError;
         if (heroData) setHeroSlides(heroData.map(formatDbHeroSlide));
+
+        // Fetch Subscribers if table exists
+        try {
+          const { data: subData } = await supabase
+            .from('de_subscribers')
+            .select('*')
+            .order('created_at', { ascending: false });
+          if (subData && subData.length > 0) {
+            setSubscribers(subData);
+          }
+        } catch {
+          // Table might not exist yet
+        }
       } catch (err) {
         console.error('Error fetching data from Supabase:', err.message);
         showToast('Connected but failed to fetch data from Supabase. Using mock data.', 'warning');
@@ -152,8 +172,6 @@ export function AppProvider({ children }) {
     loadData();
 
     // Listen for auth state changes to keep dashboard synced.
-    // The first callback fires with the restored session (or null) before
-    // any user interaction, so it also tells us when the initial check is done.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAdminLoggedIn(!!session);
       setAuthLoading(false);
@@ -639,25 +657,100 @@ export function AppProvider({ children }) {
     }
   }, [showToast]);
 
+  // Newsletter / Clan Subscriptions
+  const subscribeToClan = useCallback(async (email, type = 'all') => {
+    if (!email || !email.includes('@')) {
+      showToast('Please enter a valid email address.', 'warning');
+      return false;
+    }
+
+    const newSub = {
+      id: `sub-${Date.now()}`,
+      email: email.trim().toLowerCase(),
+      type: type || 'all',
+      created_at: new Date().toISOString(),
+    };
+
+    try {
+      if (supabase) {
+        const { error } = await supabase.from('de_subscribers').insert([{
+          email: newSub.email,
+          type: newSub.type,
+        }]);
+        if (error && !error.message?.includes('duplicate')) {
+          console.warn('Supabase subscription warning:', error.message);
+        }
+      }
+
+      setSubscribers(prev => {
+        const exists = prev.some(s => s.email === newSub.email);
+        const updated = exists ? prev : [newSub, ...prev];
+        localStorage.setItem('de_subscribers', JSON.stringify(updated));
+        return updated;
+      });
+
+      return true;
+    } catch (err) {
+      console.error('Subscribe error:', err);
+      // Still store locally
+      setSubscribers(prev => {
+        const exists = prev.some(s => s.email === newSub.email);
+        const updated = exists ? prev : [newSub, ...prev];
+        localStorage.setItem('de_subscribers', JSON.stringify(updated));
+        return updated;
+      });
+      return true;
+    }
+  }, [showToast]);
+
+  const deleteSubscriber = useCallback(async (id, email) => {
+    try {
+      if (supabase && email) {
+        await supabase.from('de_subscribers').delete().eq('email', email);
+      }
+      setSubscribers(prev => {
+        const updated = prev.filter(s => s.id !== id && s.email !== email);
+        localStorage.setItem('de_subscribers', JSON.stringify(updated));
+        return updated;
+      });
+      showToast('Subscriber removed.', 'default');
+    } catch (err) {
+      console.error('Delete subscriber error:', err.message);
+      showToast('Failed to delete subscriber.', 'danger');
+    }
+  }, [showToast]);
+
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
 
-  const addToCart = useCallback((product, size, color) => {
+  const addToCart = useCallback((product, size, color, fit = 'Regular Fit', priceOverride = null) => {
+    const finalPrice = priceOverride !== null ? priceOverride : (fit === 'Drop Shoulder Fit' ? 250 : product.price);
+    const cartId = `${product.id}-${size}-${color}-${fit}`;
+
     setCart(prev => {
-      const existing = prev.find(i => i.id === product.id && i.size === size && i.color === color);
-      if (existing) return prev.map(i =>
-        i.id === product.id && i.size === size && i.color === color
-          ? { ...i, qty: i.qty + 1 } : i
-      );
-      return [...prev, { ...product, size, color, qty: 1, cartId: `${product.id}-${size}-${color}` }];
+      const existing = prev.find(i => i.cartId === cartId);
+      if (existing) {
+        return prev.map(i =>
+          i.cartId === cartId ? { ...i, qty: i.qty + 1 } : i
+        );
+      }
+      return [...prev, {
+        ...product,
+        size,
+        color,
+        fit,
+        price: finalPrice,
+        qty: 1,
+        cartId
+      }];
     });
     setIsCartOpen(true); // Auto-open cart drawer
-    showToast('Added to cart!', 'success');
+    showToast('Added to bag!', 'success');
   }, [showToast]);
 
   const removeFromCart = useCallback((cartId) => {
     setCart(prev => prev.filter(item => item.cartId !== cartId));
-    showToast('Removed from cart', 'default');
+    showToast('Removed from bag', 'default');
   }, [showToast]);
 
   const updateCartQty = useCallback((cartId, newQty) => {
@@ -689,9 +782,9 @@ export function AppProvider({ children }) {
 
   const isInWishlist = useCallback((id) => wishlist.some(p => p.id === id), [wishlist]);
 
-  // Store operates in USD only - no multi-currency conversion.
-  const formatPrice = useCallback((priceInUsd) => {
-    return `$${(priceInUsd || 0).toFixed(2)}`;
+  // Store operates in Ghana Cedis (GH₵)
+  const formatPrice = useCallback((priceInGhs) => {
+    return `GH₵ ${(Number(priceInGhs) || 0).toFixed(2)}`;
   }, []);
 
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
@@ -710,6 +803,7 @@ export function AppProvider({ children }) {
       products, categories, orders, cart, cartCount, wishlist, toast,
       testimonials, pendingTestimonials, submitTestimonial, approveTestimonial, rejectTestimonial,
       refreshPendingTestimonials,
+      subscribers, subscribeToClan, deleteSubscriber,
       activeCategory, setActiveCategory,
       searchQuery, setSearchQuery,
       filteredProducts, showToast,

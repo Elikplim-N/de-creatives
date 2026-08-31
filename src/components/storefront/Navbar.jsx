@@ -30,6 +30,7 @@ export default function Navbar() {
   const navLinks = [
     { label: 'Home', href: '/' },
     { label: 'Shop', href: '/shop' },
+    { label: 'Lookbook', href: '/#gallery' },
     { label: 'Manifesto', href: '/manifesto' },
   ];
 

@@ -2,6 +2,7 @@ import Navbar from '../components/storefront/Navbar';
 import Hero from '../components/storefront/Hero';
 import NewArrivals from '../components/storefront/NewArrivals';
 import CategoryBanner from '../components/storefront/CategoryBanner';
+import Gallery from '../components/storefront/Gallery';
 import Testimonials from '../components/storefront/Testimonials';
 import Footer from '../components/storefront/Footer';
 
@@ -34,7 +35,7 @@ export default function Storefront() {
               letterSpacing: '0.04em',
               color: 'var(--text-primary)',
             }}>
-              God + Health + Good Vibes.
+              God × Health × GOOD vibes
             </p>
           </div>
         </section>
@@ -42,6 +43,10 @@ export default function Storefront() {
         {/* Editorial Showcase Grid */}
         <CategoryBanner />
 
+        {/* Lookbook / Visual Gallery */}
+        <Gallery />
+
+        {/* The Good Report / Testimonials */}
         <Testimonials />
       </main>
       <Footer />
