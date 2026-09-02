@@ -94,8 +94,14 @@ export function AppProvider({ children }) {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [authLoading, setAuthLoading] = useState(!!supabase);
   const [loginError, setLoginError] = useState('');
-  const [products, setProducts] = useState(initialProducts);
-  const [categories, setCategories] = useState(initialCategories);
+  const [products, setProducts] = useState(() => {
+    const saved = localStorage.getItem('de_products');
+    return saved ? JSON.parse(saved) : initialProducts;
+  });
+  const [categories, setCategories] = useState(() => {
+    const saved = localStorage.getItem('de_categories');
+    return saved ? JSON.parse(saved) : initialCategories;
+  });
   const [orders, setOrders] = useState([]);
   const [testimonials, setTestimonials] = useState(() => {
     const saved = localStorage.getItem('de_testimonials');
@@ -105,7 +111,10 @@ export function AppProvider({ children }) {
     const saved = localStorage.getItem('de_subscribers');
     return saved ? JSON.parse(saved) : initialSubscribers;
   });
-  const [heroSlides, setHeroSlides] = useState(initialHeroSlides);
+  const [heroSlides, setHeroSlides] = useState(() => {
+    const saved = localStorage.getItem('de_hero_slides');
+    return saved ? JSON.parse(saved) : initialHeroSlides;
+  });
   const [galleryPhotos, setGalleryPhotos] = useState(() => {
     const saved = localStorage.getItem('de_gallery_photos');
     return saved ? JSON.parse(saved) : initialGalleryPhotos;
@@ -373,8 +382,13 @@ export function AppProvider({ children }) {
         const { error } = await supabase.from('de_products').insert([newProductDb]);
         if (error) throw error;
 
-        // update local state
-        setProducts(prev => [formatDbProduct(newProductDb, categories), ...prev]);
+        // update local state and localStorage
+        const formatted = formatDbProduct(newProductDb, categories);
+        setProducts(prev => {
+          const next = [formatted, ...prev];
+          localStorage.setItem('de_products', JSON.stringify(next));
+          return next;
+        });
 
         showToast(`"${product.name}" added to Supabase!`, 'success');
       } catch (err) {
@@ -395,7 +409,11 @@ export function AppProvider({ children }) {
         colors: product.colors?.length > 0 ? product.colors : ['#1A1A1A'],
         colorNames: product.colorNames?.length > 0 ? product.colorNames : ['Default'],
       };
-      setProducts(prev => [newProduct, ...prev]);
+      setProducts(prev => {
+        const next = [newProduct, ...prev];
+        localStorage.setItem('de_products', JSON.stringify(next));
+        return next;
+      });
       showToast(`"${product.name}" added successfully!`, 'success');
     }
   }, [categories, showToast]);
@@ -408,23 +426,31 @@ export function AppProvider({ children }) {
         const { error } = await supabase.from('de_products').update(dbUpdates).eq('id', id);
         if (error) throw error;
 
-        setProducts(prev => prev.map(p => {
-          if (p.id === id) {
-            const merged = { ...p, ...updates };
-            if ('category' in updates) {
-              merged.categoryName = categories.find(c => c.id === updates.category)?.name || 'Uncategorized';
+        setProducts(prev => {
+          const next = prev.map(p => {
+            if (p.id === id) {
+              const merged = { ...p, ...updates };
+              if ('category' in updates) {
+                merged.categoryName = categories.find(c => c.id === updates.category)?.name || 'Uncategorized';
+              }
+              return merged;
             }
-            return merged;
-          }
-          return p;
-        }));
+            return p;
+          });
+          localStorage.setItem('de_products', JSON.stringify(next));
+          return next;
+        });
         showToast('Product updated in Supabase!', 'success');
       } catch (err) {
         console.error('Error updating product:', err.message);
         showToast(`Failed to update product: ${err.message}`, 'danger');
       }
     } else {
-      setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+      setProducts(prev => {
+        const next = prev.map(p => p.id === id ? { ...p, ...updates } : p);
+        localStorage.setItem('de_products', JSON.stringify(next));
+        return next;
+      });
       showToast('Product updated successfully!', 'success');
     }
   }, [categories, showToast]);
@@ -436,14 +462,22 @@ export function AppProvider({ children }) {
         const { error } = await supabase.from('de_products').delete().eq('id', id);
         if (error) throw error;
 
-        setProducts(prev => prev.filter(p => p.id !== id));
+        setProducts(prev => {
+          const next = prev.filter(p => p.id !== id);
+          localStorage.setItem('de_products', JSON.stringify(next));
+          return next;
+        });
         showToast(`"${product?.name}" removed from Supabase.`, 'danger');
       } catch (err) {
         console.error('Error deleting product:', err.message);
         showToast(`Failed to delete product: ${err.message}`, 'danger');
       }
     } else {
-      setProducts(prev => prev.filter(p => p.id !== id));
+      setProducts(prev => {
+        const next = prev.filter(p => p.id !== id);
+        localStorage.setItem('de_products', JSON.stringify(next));
+        return next;
+      });
       showToast(`"${product?.name}" removed.`, 'danger');
     }
   }, [products, showToast]);
@@ -463,7 +497,11 @@ export function AppProvider({ children }) {
         const { error } = await supabase.from('de_categories').insert([newCat]);
         if (error) throw error;
 
-        setCategories(prev => [...prev, newCat]);
+        setCategories(prev => {
+          const next = [...prev, newCat];
+          localStorage.setItem('de_categories', JSON.stringify(next));
+          return next;
+        });
         showToast(`Category "${category.name}" added to Supabase!`, 'success');
       } catch (err) {
         console.error('Error adding category:', err.message);
@@ -475,7 +513,11 @@ export function AppProvider({ children }) {
         id: `cat-${Date.now()}`,
         count: 0,
       };
-      setCategories(prev => [...prev, newCat]);
+      setCategories(prev => {
+        const next = [...prev, newCat];
+        localStorage.setItem('de_categories', JSON.stringify(next));
+        return next;
+      });
       showToast(`Category "${category.name}" added!`, 'success');
     }
   }, [showToast]);
@@ -486,14 +528,22 @@ export function AppProvider({ children }) {
         const { error } = await supabase.from('de_categories').update(updates).eq('id', id);
         if (error) throw error;
 
-        setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+        setCategories(prev => {
+          const next = prev.map(c => c.id === id ? { ...c, ...updates } : c);
+          localStorage.setItem('de_categories', JSON.stringify(next));
+          return next;
+        });
         showToast('Category updated!', 'success');
       } catch (err) {
         console.error('Error updating category:', err.message);
         showToast(`Failed to update category: ${err.message}`, 'danger');
       }
     } else {
-      setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+      setCategories(prev => {
+        const next = prev.map(c => c.id === id ? { ...c, ...updates } : c);
+        localStorage.setItem('de_categories', JSON.stringify(next));
+        return next;
+      });
       showToast('Category updated!', 'success');
     }
   }, [showToast]);
@@ -505,14 +555,22 @@ export function AppProvider({ children }) {
         const { error } = await supabase.from('de_categories').delete().eq('id', id);
         if (error) throw error;
 
-        setCategories(prev => prev.filter(c => c.id !== id));
+        setCategories(prev => {
+          const next = prev.filter(c => c.id !== id);
+          localStorage.setItem('de_categories', JSON.stringify(next));
+          return next;
+        });
         showToast(`Category "${cat?.name}" removed from Supabase.`, 'danger');
       } catch (err) {
         console.error('Error deleting category:', err.message);
         showToast(`Failed to delete category: ${err.message}`, 'danger');
       }
     } else {
-      setCategories(prev => prev.filter(c => c.id !== id));
+      setCategories(prev => {
+        const next = prev.filter(c => c.id !== id);
+        localStorage.setItem('de_categories', JSON.stringify(next));
+        return next;
+      });
       showToast(`Category "${cat?.name}" removed.`, 'danger');
     }
   }, [categories, showToast]);
@@ -537,7 +595,11 @@ export function AppProvider({ children }) {
         const { error } = await supabase.from('de_hero_slides').insert([newSlide]);
         if (error) throw error;
 
-        setHeroSlides(prev => [...prev, formatDbHeroSlide(newSlide)]);
+        setHeroSlides(prev => {
+          const next = [...prev, formatDbHeroSlide(newSlide)];
+          localStorage.setItem('de_hero_slides', JSON.stringify(next));
+          return next;
+        });
         showToast('Hero slide added!', 'success');
       } catch (err) {
         console.error('Error adding hero slide:', err.message);
@@ -545,7 +607,11 @@ export function AppProvider({ children }) {
       }
     } else {
       const newSlide = { ...slide, id: `hero-${Date.now()}`, sortOrder, isActive: slide.isActive ?? true };
-      setHeroSlides(prev => [...prev, newSlide]);
+      setHeroSlides(prev => {
+        const next = [...prev, newSlide];
+        localStorage.setItem('de_hero_slides', JSON.stringify(next));
+        return next;
+      });
       showToast('Hero slide added!', 'success');
     }
   }, [heroSlides, showToast]);
@@ -557,14 +623,22 @@ export function AppProvider({ children }) {
         const { error } = await supabase.from('de_hero_slides').update(dbUpdates).eq('id', id);
         if (error) throw error;
 
-        setHeroSlides(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+        setHeroSlides(prev => {
+          const next = prev.map(s => s.id === id ? { ...s, ...updates } : s);
+          localStorage.setItem('de_hero_slides', JSON.stringify(next));
+          return next;
+        });
         showToast('Hero slide updated!', 'success');
       } catch (err) {
         console.error('Error updating hero slide:', err.message);
         showToast(`Failed to update hero slide: ${err.message}`, 'danger');
       }
     } else {
-      setHeroSlides(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+      setHeroSlides(prev => {
+        const next = prev.map(s => s.id === id ? { ...s, ...updates } : s);
+        localStorage.setItem('de_hero_slides', JSON.stringify(next));
+        return next;
+      });
       showToast('Hero slide updated!', 'success');
     }
   }, [showToast]);
@@ -575,14 +649,22 @@ export function AppProvider({ children }) {
         const { error } = await supabase.from('de_hero_slides').delete().eq('id', id);
         if (error) throw error;
 
-        setHeroSlides(prev => prev.filter(s => s.id !== id));
+        setHeroSlides(prev => {
+          const next = prev.filter(s => s.id !== id);
+          localStorage.setItem('de_hero_slides', JSON.stringify(next));
+          return next;
+        });
         showToast('Hero slide removed.', 'danger');
       } catch (err) {
         console.error('Error deleting hero slide:', err.message);
         showToast(`Failed to delete hero slide: ${err.message}`, 'danger');
       }
     } else {
-      setHeroSlides(prev => prev.filter(s => s.id !== id));
+      setHeroSlides(prev => {
+        const next = prev.filter(s => s.id !== id);
+        localStorage.setItem('de_hero_slides', JSON.stringify(next));
+        return next;
+      });
       showToast('Hero slide removed.', 'danger');
     }
   }, [showToast]);
@@ -607,23 +689,49 @@ export function AppProvider({ children }) {
         const { error: err2 } = await supabase.from('de_hero_slides').update({ sort_order: currentOrder }).eq('id', target.id);
         if (err2) throw err2;
 
-        setHeroSlides(prev => prev.map(s => {
-          if (s.id === current.id) return { ...s, sortOrder: targetOrder };
-          if (s.id === target.id) return { ...s, sortOrder: currentOrder };
-          return s;
-        }));
+        setHeroSlides(prev => {
+          const next = prev.map(s => {
+            if (s.id === current.id) return { ...s, sortOrder: targetOrder };
+            if (s.id === target.id) return { ...s, sortOrder: currentOrder };
+            return s;
+          });
+          localStorage.setItem('de_hero_slides', JSON.stringify(next));
+          return next;
+        });
       } catch (err) {
         console.error('Error reordering hero slides:', err.message);
         showToast(`Failed to reorder: ${err.message}`, 'danger');
       }
     } else {
-      setHeroSlides(prev => prev.map(s => {
-        if (s.id === current.id) return { ...s, sortOrder: targetOrder };
-        if (s.id === target.id) return { ...s, sortOrder: currentOrder };
-        return s;
-      }));
+      setHeroSlides(prev => {
+        const next = prev.map(s => {
+          if (s.id === current.id) return { ...s, sortOrder: targetOrder };
+          if (s.id === target.id) return { ...s, sortOrder: currentOrder };
+          return s;
+        });
+        localStorage.setItem('de_hero_slides', JSON.stringify(next));
+        return next;
+      });
     }
   }, [heroSlides, showToast]);
+
+  const resetProductsToDefault = useCallback(() => {
+    localStorage.removeItem('de_products');
+    setProducts(initialProducts);
+    showToast('Products restored to default.', 'default');
+  }, [showToast]);
+
+  const resetCategoriesToDefault = useCallback(() => {
+    localStorage.removeItem('de_categories');
+    setCategories(initialCategories);
+    showToast('Categories restored to default.', 'default');
+  }, [showToast]);
+
+  const resetHeroSlidesToDefault = useCallback(() => {
+    localStorage.removeItem('de_hero_slides');
+    setHeroSlides(initialHeroSlides);
+    showToast('Hero slides restored to default.', 'default');
+  }, [showToast]);
 
   // Public - any visitor can submit a review.
   const submitTestimonial = useCallback(async ({ name, location, text, rating }) => {
@@ -932,9 +1040,9 @@ export function AppProvider({ children }) {
       activeCategory, setActiveCategory,
       searchQuery, setSearchQuery,
       filteredProducts, showToast,
-      addProduct, updateProduct, deleteProduct, uploadProductImages,
-      addCategory, updateCategory, deleteCategory,
-      heroSlides: sortedHeroSlides, addHeroSlide, updateHeroSlide, deleteHeroSlide, reorderHeroSlide,
+      addProduct, updateProduct, deleteProduct, uploadProductImages, resetProductsToDefault,
+      addCategory, updateCategory, deleteCategory, resetCategoriesToDefault,
+      heroSlides: sortedHeroSlides, addHeroSlide, updateHeroSlide, deleteHeroSlide, reorderHeroSlide, resetHeroSlidesToDefault,
       galleryPhotos, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto, resetGalleryPhotos,
       manifesto, updateManifesto, resetManifesto,
       addToCart, toggleWishlist, isInWishlist,

@@ -13,20 +13,36 @@ const emptyForm = {
 };
 
 export default function AdminProducts() {
-  const { products, categories, addProduct, deleteProduct, updateProduct, uploadProductImages, formatPrice } = useApp();
-  // Category is optional - products can be added as Uncategorized and sorted
-  // into categories later, so the form must never default to (or require) an
-  // id that doesn't actually exist in the database.
-  const [form, setForm] = useState(emptyForm);
-  const [editId, setEditId] = useState(null);
+  const { products, categories, addProduct, updateProduct, deleteProduct, uploadProductImages, resetProductsToDefault, formatPrice } = useApp();
   const [showForm, setShowForm] = useState(false);
-  const [search, setSearch] = useState('');
-  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [editId, setEditId] = useState(null);
+  const [form, setForm] = useState(emptyForm);
   const [uploading, setUploading] = useState(false);
+  const [imageUrlInput, setImageUrlInput] = useState('');
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-  const filtered = products.filter(p =>
-    !search || p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  // Filters & sorting
+  const [search, setSearch] = useState('');
+  const [selectedCat, setSelectedCat] = useState('all');
+  const [sortBy, setSortBy] = useState('name-asc');
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  const filtered = products
+    .filter(p => {
+      const matchSearch = !search ||
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        (p.sku && p.sku.toLowerCase().includes(search.toLowerCase()));
+      const matchCat = selectedCat === 'all' || p.category === selectedCat;
+      return matchSearch && matchCat;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'name-asc') return a.name.localeCompare(b.name);
+      if (sortBy === 'name-desc') return b.name.localeCompare(a.name);
+      if (sortBy === 'price-asc') return a.price - b.price;
+      if (sortBy === 'price-desc') return b.price - a.price;
+      if (sortBy === 'stock-asc') return a.stock - b.stock;
+      return 0;
+    });
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -34,33 +50,24 @@ export default function AdminProducts() {
   };
 
   const handleImagesChange = (e) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-    const newItems = files.map(file => ({ url: URL.createObjectURL(file), file }));
-    setForm(prev => ({ ...prev, images: [...prev.images, ...newItems] }));
-    e.target.value = ''; // allow re-selecting the same file again later
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+    const newImgs = files.map(file => ({ file, url: URL.createObjectURL(file) }));
+    setForm(prev => ({ ...prev, images: [...prev.images, ...newImgs] }));
   };
 
   const removeImage = (index) => {
-    setForm(prev => {
-      const target = prev.images[index];
-      if (target?.file) URL.revokeObjectURL(target.url);
-      return { ...prev, images: prev.images.filter((_, i) => i !== index) };
-    });
+    setForm(prev => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
   };
 
   const moveImage = (index, direction) => {
-    setForm(prev => {
-      const next = [...prev.images];
-      const target = index + direction;
-      if (target < 0 || target >= next.length) return prev;
-      [next[index], next[target]] = [next[target], next[index]];
-      return { ...prev, images: next };
-    });
-  };
-
-  const addColorSwatch = () => {
-    setForm(prev => ({ ...prev, colorSwatches: [...prev.colorSwatches, { hex: '#0A0A0A', name: '' }] }));
+    const newImages = [...form.images];
+    const target = index + direction;
+    if (target < 0 || target >= newImages.length) return;
+    const temp = newImages[index];
+    newImages[index] = newImages[target];
+    newImages[target] = temp;
+    setForm(prev => ({ ...prev, images: newImages }));
   };
 
   const updateColorSwatch = (index, field, value) => {
@@ -70,6 +77,10 @@ export default function AdminProducts() {
     }));
   };
 
+  const addColorSwatch = () => {
+    setForm(prev => ({ ...prev, colorSwatches: [...prev.colorSwatches, { hex: '#0A0A0A', name: '' }] }));
+  };
+
   const removeColorSwatch = (index) => {
     setForm(prev => ({ ...prev, colorSwatches: prev.colorSwatches.filter((_, i) => i !== index) }));
   };
@@ -77,38 +88,53 @@ export default function AdminProducts() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.price) return;
-    const cat = categories.find(c => c.id === form.category);
 
     setUploading(true);
     try {
-      // Upload only the newly-picked files, in place, preserving order
-      // against the already-uploaded URLs already sitting in the list.
-      const filesToUpload = form.images.filter(img => img.file).map(img => img.file);
-      const uploadedUrls = filesToUpload.length > 0 ? await uploadProductImages(filesToUpload) : [];
-      let uploadIdx = 0;
-      const images = form.images.map(img => img.file ? uploadedUrls[uploadIdx++] : img.url);
+      // Separate existing URLs from new File objects that need uploading
+      const existingUrls = form.images.filter(img => !img.file).map(img => img.url);
+      const newFiles = form.images.filter(img => img.file).map(img => img.file);
 
+      let newUrls = [];
+      if (newFiles.length > 0) {
+        newUrls = await uploadProductImages(newFiles);
+      }
+
+      const allImageUrls = [...existingUrls, ...newUrls];
       const namedSwatches = form.colorSwatches.filter(c => c.name.trim());
+
+      const sizesArray = form.sizes
+        ? form.sizes.split(',').map(s => s.trim()).filter(Boolean)
+        : ['S', 'M', 'L', 'XL'];
+
       const payload = {
-        ...form,
+        name: form.name,
+        sku: form.sku || undefined,
         price: parseFloat(form.price),
         comparePrice: form.comparePrice ? parseFloat(form.comparePrice) : null,
+        category: form.category || 'cat-1',
+        categoryName: categories.find(c => c.id === form.category)?.name || 'Uncategorized',
         stock: parseInt(form.stock) || 0,
-        sizes: form.sizes.split(',').map(s => s.trim()).filter(Boolean),
-        categoryName: cat?.name || 'Uncategorized',
-        images,
+        sizes: sizesArray,
+        description: form.description,
+        isNew: form.isNew,
+        isFeatured: form.isFeatured,
+        isBestseller: form.isBestseller,
+        images: allImageUrls,
         colors: namedSwatches.map(c => c.hex),
         colorNames: namedSwatches.map(c => c.name.trim()),
       };
-      delete payload.colorSwatches;
+
       if (editId) {
         await updateProduct(editId, payload);
-        setEditId(null);
       } else {
         await addProduct(payload);
       }
-      setForm(emptyForm);
+
       setShowForm(false);
+      setEditId(null);
+      setForm(emptyForm);
+      setImageUrlInput('');
     } finally {
       setUploading(false);
     }
@@ -118,17 +144,23 @@ export default function AdminProducts() {
     const colors = product.colors || [];
     const colorNames = product.colorNames || [];
     setForm({
-      ...emptyForm,
-      ...product,
-      price: (product.price || 0).toString(),
-      comparePrice: product.comparePrice?.toString() || '',
-      stock: (product.stock || 0).toString(),
+      name: product.name,
+      sku: product.sku || '',
+      price: product.price,
+      comparePrice: product.comparePrice || '',
+      category: product.category,
+      stock: product.stock,
       sizes: (product.sizes || []).join(', '),
-      images: (product.images || []).map(url => ({ url })),
+      description: product.description || '',
+      isNew: product.isNew ?? false,
+      isFeatured: product.isFeatured ?? false,
+      isBestseller: product.isBestseller ?? false,
+      images: (product.images || []).map(url => ({ file: null, url })),
       colorSwatches: colors.map((hex, i) => ({ hex, name: colorNames[i] || '' })),
     });
     setEditId(product.id);
     setShowForm(true);
+    setImageUrlInput('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -139,16 +171,47 @@ export default function AdminProducts() {
           <h1 className="admin-page-title">Product Management</h1>
           <p className="admin-page-subtitle">{products.length} products in catalog</p>
         </div>
-        <button className="btn btn-primary" onClick={() => { setShowForm(v => !v); setEditId(null); setForm(emptyForm); }}>
-          {showForm ? 'Cancel' : (
-            <>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              Add Product
-            </>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          {showResetConfirm ? (
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Reset all products?</span>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                onClick={() => { resetProductsToDefault(); setShowResetConfirm(false); }}
+              >
+                Confirm Reset
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => setShowResetConfirm(false)}
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => setShowResetConfirm(true)}
+              title="Restore original default products"
+            >
+              ↺ Reset to Defaults
+            </button>
           )}
-        </button>
+          <button className="btn btn-primary" onClick={() => { setShowForm(v => !v); setEditId(null); setForm(emptyForm); }}>
+            {showForm ? 'Cancel' : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Product
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Add/Edit Form */}
@@ -168,6 +231,30 @@ export default function AdminProducts() {
                   <div className="admin-upload-zone__icon">📸</div>
                   <p className="admin-upload-zone__text">Click to upload or drag & drop</p>
                   <p className="admin-upload-zone__sub">PNG, JPG up to 10MB each &middot; first image is the cover shown in listings</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Or paste image URL (e.g. /products/... or https://...)"
+                    value={imageUrlInput}
+                    onChange={e => setImageUrlInput(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    style={{ whiteSpace: 'nowrap' }}
+                    onClick={() => {
+                      if (!imageUrlInput.trim()) return;
+                      setForm(prev => ({
+                        ...prev,
+                        images: [...prev.images, { file: null, url: imageUrlInput.trim() }]
+                      }));
+                      setImageUrlInput('');
+                    }}
+                  >
+                    + Add URL
+                  </button>
                 </div>
 
                 {form.images.length > 0 && (

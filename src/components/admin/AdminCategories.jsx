@@ -6,12 +6,13 @@ import './AdminInventory.css';
 const emptyForm = { name: '', slug: '', description: '', image: '' };
 
 export default function AdminCategories() {
-  const { categories, products, addCategory, updateCategory, deleteCategory, uploadProductImages } = useApp();
+  const { categories, products, addCategory, updateCategory, deleteCategory, uploadProductImages, resetCategoriesToDefault } = useApp();
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -72,6 +73,37 @@ export default function AdminCategories() {
           <h1 className="admin-page-title">Categories</h1>
           <p className="admin-page-subtitle">{categories.length} categories</p>
         </div>
+        <div>
+          {showResetConfirm ? (
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Reset all categories?</span>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                onClick={() => { resetCategoriesToDefault(); setShowResetConfirm(false); }}
+              >
+                Confirm Reset
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => setShowResetConfirm(false)}
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => setShowResetConfirm(true)}
+              title="Restore original default categories"
+            >
+              ↺ Reset to Defaults
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="admin-categories__layout">
@@ -95,6 +127,16 @@ export default function AdminCategories() {
                     <p className="admin-upload-zone__sub">Shown on the homepage editorial banner</p>
                   </>
                 )}
+              </div>
+              <div style={{ marginTop: '0.5rem' }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  name="image"
+                  placeholder="Or paste image URL (e.g. /products/... or https://...)"
+                  value={form.image}
+                  onChange={handleChange}
+                />
               </div>
             </div>
             <div className="form-group">

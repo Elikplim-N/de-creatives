@@ -6,12 +6,13 @@ import './AdminInventory.css';
 const emptyForm = { eyebrow: '', heading: '', subheading: '', cta: '', ctaSecondary: '', image: '', isActive: true };
 
 export default function AdminHero() {
-  const { heroSlides, addHeroSlide, updateHeroSlide, deleteHeroSlide, reorderHeroSlide, uploadProductImages } = useApp();
+  const { heroSlides, addHeroSlide, updateHeroSlide, deleteHeroSlide, reorderHeroSlide, uploadProductImages, resetHeroSlidesToDefault } = useApp();
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -76,6 +77,37 @@ export default function AdminHero() {
           <h1 className="admin-page-title">Homepage</h1>
           <p className="admin-page-subtitle">{heroSlides.length} hero slides</p>
         </div>
+        <div>
+          {showResetConfirm ? (
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Reset all slides?</span>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                onClick={() => { resetHeroSlidesToDefault(); setShowResetConfirm(false); }}
+              >
+                Confirm Reset
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => setShowResetConfirm(false)}
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => setShowResetConfirm(true)}
+              title="Restore original default hero slides"
+            >
+              ↺ Reset to Defaults
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="admin-categories__layout">
@@ -99,6 +131,16 @@ export default function AdminHero() {
                     <p className="admin-upload-zone__sub">Full-bleed background for this slide</p>
                   </>
                 )}
+              </div>
+              <div style={{ marginTop: '0.5rem' }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  name="image"
+                  placeholder="Or paste image URL (e.g. /products/... or https://...)"
+                  value={form.image}
+                  onChange={handleChange}
+                />
               </div>
             </div>
             <div className="form-group">
