@@ -1,11 +1,5 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import {
-  products as initialProducts,
-  categories as initialCategories,
-  testimonials as initialTestimonials,
-  heroSlides as initialHeroSlides,
-  subscribers as initialSubscribers,
-  initialGalleryPhotos,
   initialManifesto,
   adminCredentials
 } from '../data/mockData';
@@ -97,11 +91,11 @@ export function AppProvider({ children }) {
   const [orders, setOrders] = useState([]);
   const [testimonials, setTestimonials] = useState(() => {
     const saved = localStorage.getItem('de_testimonials');
-    return saved ? JSON.parse(saved) : initialTestimonials;
+    return saved ? JSON.parse(saved) : [];
   });
   const [subscribers, setSubscribers] = useState(() => {
     const saved = localStorage.getItem('de_subscribers');
-    return saved ? JSON.parse(saved) : initialSubscribers;
+    return saved ? JSON.parse(saved) : [];
   });
   const [heroSlides, setHeroSlides] = useState(() => {
     const saved = localStorage.getItem('de_hero_slides');
@@ -109,7 +103,7 @@ export function AppProvider({ children }) {
   });
   const [galleryPhotos, setGalleryPhotos] = useState(() => {
     const saved = localStorage.getItem('de_gallery_photos');
-    return saved ? JSON.parse(saved) : initialGalleryPhotos;
+    return saved ? JSON.parse(saved) : [];
   });
   const [manifesto, setManifesto] = useState(() => {
     const saved = localStorage.getItem('de_manifesto');
