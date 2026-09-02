@@ -118,7 +118,7 @@ export default function Footer() {
           {/* Links */}
           <nav className="footer__nav-links" aria-label="Footer navigation">
             <Link to="/shop" className="footer__nav-link">Shop</Link>
-            <Link to="/manifesto" className="footer__nav-link">Manifesto</Link>
+            <Link to="/manifesto" className="footer__nav-link">Clan of DE</Link>
             <a
               href="https://wa.me/233595515040"
               target="_blank"
@@ -138,14 +138,11 @@ export default function Footer() {
             </a>
           </nav>
 
-          {/* Copyright & Admin Portal */}
+          {/* Copyright */}
           <div className="footer__bottom-centered">
             <p className="footer__copy">
               &copy; {year} DE CREATIVES. ALL RIGHTS RESERVED.
             </p>
-            <Link to="/admin/login" className="footer__admin-link-subtle">
-              Admin Portal
-            </Link>
           </div>
         </div>
       </div>

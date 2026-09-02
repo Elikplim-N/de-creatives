@@ -1,5 +1,14 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { products as initialProducts, categories as initialCategories, testimonials as initialTestimonials, heroSlides as initialHeroSlides, subscribers as initialSubscribers, adminCredentials } from '../data/mockData';
+import {
+  products as initialProducts,
+  categories as initialCategories,
+  testimonials as initialTestimonials,
+  heroSlides as initialHeroSlides,
+  subscribers as initialSubscribers,
+  initialGalleryPhotos,
+  initialManifesto,
+  adminCredentials
+} from '../data/mockData';
 import { supabase } from '../lib/supabaseClient';
 
 const AppContext = createContext(null);
@@ -88,13 +97,27 @@ export function AppProvider({ children }) {
   const [products, setProducts] = useState(initialProducts);
   const [categories, setCategories] = useState(initialCategories);
   const [orders, setOrders] = useState([]);
-  const [testimonials, setTestimonials] = useState(initialTestimonials);
+  const [testimonials, setTestimonials] = useState(() => {
+    const saved = localStorage.getItem('de_testimonials');
+    return saved ? JSON.parse(saved) : initialTestimonials;
+  });
   const [subscribers, setSubscribers] = useState(() => {
     const saved = localStorage.getItem('de_subscribers');
     return saved ? JSON.parse(saved) : initialSubscribers;
   });
   const [heroSlides, setHeroSlides] = useState(initialHeroSlides);
-  const [pendingTestimonials, setPendingTestimonials] = useState([]);
+  const [galleryPhotos, setGalleryPhotos] = useState(() => {
+    const saved = localStorage.getItem('de_gallery_photos');
+    return saved ? JSON.parse(saved) : initialGalleryPhotos;
+  });
+  const [manifesto, setManifesto] = useState(() => {
+    const saved = localStorage.getItem('de_manifesto');
+    return saved ? JSON.parse(saved) : initialManifesto;
+  });
+  const [pendingTestimonials, setPendingTestimonials] = useState(() => {
+    const saved = localStorage.getItem('de_pending_testimonials');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [toast, setToast] = useState(null);
@@ -602,59 +625,99 @@ export function AppProvider({ children }) {
     }
   }, [heroSlides, showToast]);
 
-  // Public - any visitor can submit a review. RLS forces is_approved=false
-  // on every public insert regardless of what's sent, so this can't be used
-  // to skip moderation even by a malicious direct API call.
+  // Public - any visitor can submit a review.
   const submitTestimonial = useCallback(async ({ name, location, text, rating }) => {
-    if (!supabase) {
-      showToast('Reviews require a connected backend - not available in demo mode.', 'warning');
-      return false;
+    const newTestimonial = {
+      id: `review-${Date.now()}`,
+      name,
+      location: location || null,
+      text,
+      rating: Number(rating) || 5,
+      is_approved: false,
+      created_at: new Date().toISOString()
+    };
+
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('de_testimonials').insert([{
+          name, location: location || null, text, rating: Number(rating) || 5, is_approved: false,
+        }]);
+        if (error) console.warn('Supabase testimonial insert warning:', error.message);
+      } catch (err) {
+        console.warn('Supabase testimonial insert error:', err.message);
+      }
     }
-    try {
-      const { error } = await supabase.from('de_testimonials').insert([{
-        name, location: location || null, text, rating, is_approved: false,
-      }]);
-      if (error) throw error;
-      showToast('Thanks for sharing! Your review will appear once approved.', 'success');
-      return true;
-    } catch (err) {
-      console.error('Error submitting testimonial:', err.message);
-      showToast(`Failed to submit review: ${err.message}`, 'danger');
-      return false;
-    }
+
+    setPendingTestimonials(prev => {
+      const updated = [newTestimonial, ...prev];
+      localStorage.setItem('de_pending_testimonials', JSON.stringify(updated));
+      return updated;
+    });
+
+    showToast('Thanks for sharing! Your review will appear once approved.', 'success');
+    return true;
   }, [showToast]);
 
-  // Admin-only moderation actions (RLS requires an authenticated session).
+  // Admin-only moderation actions.
   const approveTestimonial = useCallback(async (id) => {
-    if (!supabase) return;
-    try {
-      const { error } = await supabase.from('de_testimonials').update({ is_approved: true }).eq('id', id);
-      if (error) throw error;
-      setPendingTestimonials(prev => {
-        const approved = prev.find(t => t.id === id);
-        if (approved) setTestimonials(t => [{ ...approved, is_approved: true }, ...t]);
-        return prev.filter(t => t.id !== id);
-      });
-      showToast('Review approved and now live.', 'success');
-    } catch (err) {
-      console.error('Error approving testimonial:', err.message);
-      showToast(`Failed to approve review: ${err.message}`, 'danger');
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('de_testimonials').update({ is_approved: true }).eq('id', id);
+        if (error) console.warn('Supabase testimonial update warning:', error.message);
+      } catch (err) {
+        console.warn('Supabase testimonial update error:', err.message);
+      }
     }
+
+    setPendingTestimonials(prev => {
+      const target = prev.find(t => t.id === id);
+      const remaining = prev.filter(t => t.id !== id);
+      localStorage.setItem('de_pending_testimonials', JSON.stringify(remaining));
+      if (target) {
+        setTestimonials(tList => {
+          const updated = [{ ...target, is_approved: true }, ...tList];
+          localStorage.setItem('de_testimonials', JSON.stringify(updated));
+          return updated;
+        });
+      }
+      return remaining;
+    });
+
+    showToast('Review approved and now live.', 'success');
   }, [showToast]);
 
   // Handles both rejecting a pending review and removing an already-live one.
   const rejectTestimonial = useCallback(async (id) => {
-    if (!supabase) return;
-    try {
-      const { error } = await supabase.from('de_testimonials').delete().eq('id', id);
-      if (error) throw error;
-      setPendingTestimonials(prev => prev.filter(t => t.id !== id));
-      setTestimonials(prev => prev.filter(t => t.id !== id));
-      showToast('Review removed.', 'default');
-    } catch (err) {
-      console.error('Error removing testimonial:', err.message);
-      showToast(`Failed to remove review: ${err.message}`, 'danger');
+    if (supabase) {
+      try {
+        const { error } = await supabase.from('de_testimonials').delete().eq('id', id);
+        if (error) console.warn('Supabase testimonial delete warning:', error.message);
+      } catch (err) {
+        console.warn('Supabase testimonial delete error:', err.message);
+      }
     }
+
+    setPendingTestimonials(prev => {
+      const updated = prev.filter(t => t.id !== id);
+      localStorage.setItem('de_pending_testimonials', JSON.stringify(updated));
+      return updated;
+    });
+
+    setTestimonials(prev => {
+      const updated = prev.filter(t => t.id !== id);
+      localStorage.setItem('de_testimonials', JSON.stringify(updated));
+      return updated;
+    });
+
+    showToast('Review removed.', 'default');
+  }, [showToast]);
+
+  const resetTestimonials = useCallback(() => {
+    setTestimonials(initialTestimonials);
+    setPendingTestimonials([]);
+    localStorage.removeItem('de_testimonials');
+    localStorage.removeItem('de_pending_testimonials');
+    showToast('Reviews reset to default.', 'default');
   }, [showToast]);
 
   // Newsletter / Clan Subscriptions
@@ -797,11 +860,58 @@ export function AppProvider({ children }) {
     return matchCat && matchSearch;
   });
 
+  // Gallery Management
+  const addGalleryPhoto = useCallback((photo) => {
+    setGalleryPhotos(prev => {
+      const newPhotos = [{ ...photo, id: Date.now() }, ...prev];
+      localStorage.setItem('de_gallery_photos', JSON.stringify(newPhotos));
+      return newPhotos;
+    });
+    showToast('Photo added to The Gallery of DE!', 'success');
+  }, [showToast]);
+
+  const updateGalleryPhoto = useCallback((id, updatedFields) => {
+    setGalleryPhotos(prev => {
+      const newPhotos = prev.map(p => p.id === id ? { ...p, ...updatedFields } : p);
+      localStorage.setItem('de_gallery_photos', JSON.stringify(newPhotos));
+      return newPhotos;
+    });
+    showToast('Gallery photo updated!', 'success');
+  }, [showToast]);
+
+  const deleteGalleryPhoto = useCallback((id) => {
+    setGalleryPhotos(prev => {
+      const newPhotos = prev.filter(p => p.id !== id);
+      localStorage.setItem('de_gallery_photos', JSON.stringify(newPhotos));
+      return newPhotos;
+    });
+    showToast('Gallery photo removed.', 'default');
+  }, [showToast]);
+
+  const resetGalleryPhotos = useCallback(() => {
+    setGalleryPhotos(initialGalleryPhotos);
+    localStorage.removeItem('de_gallery_photos');
+    showToast('Gallery reset to default.', 'default');
+  }, [showToast]);
+
+  // Manifesto / Clan of DE Management
+  const updateManifesto = useCallback((newManifestoData) => {
+    setManifesto(newManifestoData);
+    localStorage.setItem('de_manifesto', JSON.stringify(newManifestoData));
+    showToast('Clan of DE content updated successfully!', 'success');
+  }, [showToast]);
+
+  const resetManifesto = useCallback(() => {
+    setManifesto(initialManifesto);
+    localStorage.removeItem('de_manifesto');
+    showToast('Clan of DE reset to default.', 'default');
+  }, [showToast]);
+
   return (
     <AppContext.Provider value={{
       isAdminLoggedIn, authLoading, loginError, adminLogin, adminLogout,
       products, categories, orders, cart, cartCount, wishlist, toast,
-      testimonials, pendingTestimonials, submitTestimonial, approveTestimonial, rejectTestimonial,
+      testimonials, pendingTestimonials, submitTestimonial, approveTestimonial, rejectTestimonial, resetTestimonials,
       refreshPendingTestimonials,
       subscribers, subscribeToClan, deleteSubscriber,
       activeCategory, setActiveCategory,
@@ -810,6 +920,8 @@ export function AppProvider({ children }) {
       addProduct, updateProduct, deleteProduct, uploadProductImages,
       addCategory, updateCategory, deleteCategory,
       heroSlides: sortedHeroSlides, addHeroSlide, updateHeroSlide, deleteHeroSlide, reorderHeroSlide,
+      galleryPhotos, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto, resetGalleryPhotos,
+      manifesto, updateManifesto, resetManifesto,
       addToCart, toggleWishlist, isInWishlist,
       removeFromCart, updateCartQty, clearCart,
       formatPrice,

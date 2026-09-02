@@ -1,11 +1,11 @@
 .manifesto-hero {
   position: relative;
-  height: clamp(400px, 75vh, 800px);
+  height: clamp(380px, 60vh, 650px);
   width: 100%;
   overflow: hidden;
   display: flex;
   align-items: flex-end;
-  padding-bottom: var(--space-16);
+  padding-bottom: var(--space-12);
 }
 .manifesto-hero__img {
   position: absolute;
@@ -18,7 +18,7 @@
 .manifesto-hero__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, var(--black) 0%, rgba(10, 10, 10, 0.4) 50%, rgba(10, 10, 10, 0.1) 100%);
+  background: linear-gradient(to top, var(--black) 0%, rgba(10, 10, 10, 0.6) 50%, rgba(10, 10, 10, 0.2) 100%);
 }
 .manifesto-hero__content {
   position: relative;
@@ -27,7 +27,7 @@
 }
 .manifesto-hero__brand {
   font-family: var(--font-accent);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.3em;
   text-transform: uppercase;
@@ -36,8 +36,8 @@
 }
 .manifesto-hero__title {
   font-family: var(--font-display);
-  font-size: clamp(3rem, 7vw, 6.5rem);
-  line-height: 1;
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  line-height: 1.1;
   text-transform: uppercase;
   color: var(--white);
   font-weight: 300;
@@ -45,7 +45,7 @@
 }
 .manifesto-hero__tagline {
   font-family: var(--font-accent);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.25em;
   text-transform: uppercase;
@@ -53,100 +53,224 @@
   margin-top: var(--space-4);
 }
 
-/* Conviction */
-.manifesto-conviction {
-  background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-subtle);
-  padding: var(--space-24) 0;
-}
-.manifesto-conviction__inner {
-  max-width: 800px;
-  text-align: center;
+/* Clan Letter Container */
+.clan-letter-container {
+  max-width: 920px;
   margin: 0 auto;
-}
-.manifesto-conviction__label {
-  font-family: var(--font-accent);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--turquoise);
-  margin-bottom: var(--space-6);
-}
-.manifesto-conviction__text {
-  font-family: var(--font-body);
-  font-size: clamp(1.4rem, 3.5vw, 2.2rem);
-  font-weight: 300;
-  line-height: 1.6;
-  letter-spacing: 0.02em;
-  color: var(--text-primary);
-}
-
-/* Articles */
-.manifesto-articles {
-  padding: var(--space-20) var(--space-6);
-}
-.manifesto-articles__grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  padding: var(--space-12) var(--space-6);
+  display: flex;
+  flex-direction: column;
   gap: var(--space-12);
 }
-.manifesto-article {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-  border-left: 1px solid var(--border-subtle);
-  padding-left: var(--space-6);
+
+/* Intro Card */
+.clan-intro-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: clamp(24px, 5vw, 48px);
+  text-align: center;
   position: relative;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
-.manifesto-article::before {
-  content: '';
-  position: absolute;
-  left: -1px;
-  top: 0;
-  height: 40px;
-  width: 1px;
-  background: var(--turquoise);
-}
-.manifesto-article__number {
+
+.clan-greeting-badge {
+  display: inline-block;
   font-family: var(--font-accent);
-  font-size: 0.68rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  letter-spacing: 0.2em;
-  color: var(--text-muted);
+  color: var(--turquoise);
+  background: rgba(0, 200, 200, 0.1);
+  border: 1px solid rgba(0, 200, 200, 0.25);
+  padding: 6px 18px;
+  border-radius: 999px;
+  margin-bottom: var(--space-6);
 }
-.manifesto-article__body {
+
+.clan-intro-lead {
+  font-family: var(--font-body);
+  font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--text-primary);
+  white-space: pre-line;
+  max-width: 680px;
+  margin: 0 auto var(--space-8) auto;
+}
+
+.clan-slogan-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-accent);
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--white);
+  background: linear-gradient(135deg, rgba(0, 200, 200, 0.2) 0%, rgba(20, 20, 20, 0.8) 100%);
+  border: 1px solid var(--turquoise);
+  padding: 12px 28px;
+  border-radius: var(--radius-md);
+}
+
+/* Three Core Pillars */
+.clan-pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-6);
+}
+
+.clan-pillar-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
-.manifesto-article__body p {
-  font-family: var(--font-body);
-  font-size: 1.1rem;
-  font-weight: 300;
-  line-height: 1.6;
-  color: var(--text-secondary);
+
+.clan-pillar-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--turquoise);
+  box-shadow: 0 12px 30px rgba(0, 200, 200, 0.12);
 }
-.manifesto-article__body p.highlight {
-  color: var(--text-primary);
+
+.clan-pillar-icon {
+  font-size: 2.2rem;
+  margin-bottom: var(--space-4);
 }
-.manifesto-article__body p.brand-highlight {
+
+.clan-pillar-title {
   font-family: var(--font-display);
   font-size: 1.8rem;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
+  color: var(--white);
+  margin: 0 0 var(--space-2) 0;
+  text-transform: uppercase;
+}
+
+.clan-pillar-subtitle {
+  font-family: var(--font-accent);
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--turquoise);
-  margin-top: var(--space-2);
+  margin: 0 0 var(--space-4) 0;
+  line-height: 1.4;
+}
+
+.clan-pillar-body {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: auto;
+}
+
+/* Community Closing */
+.clan-closing-card {
+  background: linear-gradient(180deg, var(--bg-card) 0%, rgba(15, 15, 15, 0.95) 100%);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: clamp(24px, 5vw, 40px);
+  text-align: center;
+}
+
+.clan-closing-content p {
+  font-family: var(--font-body);
+  font-size: 1.15rem;
+  font-weight: 300;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+}
+
+.clan-closing-content p.clan-closing-highlight {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+  color: var(--turquoise);
+  letter-spacing: 0.04em;
+  margin: var(--space-4) 0;
+}
+
+/* Anime Easter Egg Secret Section */
+.clan-easter-egg-card {
+  background: radial-gradient(circle at top right, rgba(0, 200, 200, 0.12) 0%, rgba(18, 18, 22, 0.95) 70%);
+  border: 1px dashed rgba(0, 200, 200, 0.4);
+  border-radius: var(--radius-lg);
+  padding: clamp(24px, 5vw, 40px);
+  text-align: center;
+  position: relative;
+}
+
+.clan-easter-egg-badge {
+  display: inline-block;
+  font-family: var(--font-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--turquoise);
+  text-transform: uppercase;
+  background: rgba(0, 200, 200, 0.12);
+  padding: 4px 14px;
+  border-radius: 999px;
+  margin-bottom: var(--space-3);
+}
+
+.clan-easter-egg-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3.5vw, 2rem);
+  color: var(--white);
+  letter-spacing: 0.03em;
+  margin: 0 0 var(--space-4) 0;
+}
+
+.clan-easter-egg-body {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  max-width: 600px;
+  margin: 0 auto var(--space-6) auto;
+}
+
+.clan-easter-egg-body p {
+  margin-bottom: var(--space-2);
+}
+
+.clan-easter-egg-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+}
+
+.clan-easter-egg-footer p {
+  font-family: var(--font-accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0;
 }
 
 /* CTA */
 .manifesto-cta {
   border-top: 1px solid var(--border-subtle);
-  padding: var(--space-24) 0;
+  padding: var(--space-16) 0 var(--space-8) 0;
   text-align: center;
 }
 .manifesto-cta__sub {
   font-family: var(--font-accent);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -154,18 +278,15 @@
 }
 .manifesto-cta__text {
   font-family: var(--font-body);
-  font-size: 1.25rem;
+  font-size: 1.15rem;
   font-weight: 300;
-  color: var(--text-primary);
-  margin-top: var(--space-3);
+  color: var(--text-secondary);
+  margin-top: var(--space-2);
 }
 
 @media (max-width: 900px) {
-  .manifesto-articles__grid {
+  .clan-pillars-grid {
     grid-template-columns: 1fr;
-    gap: var(--space-12);
-  }
-  .manifesto-article {
-    padding-left: var(--space-4);
+    gap: var(--space-6);
   }
 }

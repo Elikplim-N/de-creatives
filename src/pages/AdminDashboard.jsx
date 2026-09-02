@@ -8,6 +8,8 @@ import AdminHero from '../components/admin/AdminHero';
 import AdminOverview from '../components/admin/AdminOverview';
 import AdminReviews from '../components/admin/AdminReviews';
 import AdminSubscribers from '../components/admin/AdminSubscribers';
+import AdminGallery from '../components/admin/AdminGallery';
+import AdminManifesto from '../components/admin/AdminManifesto';
 import './AdminDashboard.css';
 
 const navItems = [
@@ -53,6 +55,25 @@ const navItems = [
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'gallery', label: 'The Gallery of DE', path: '/admin/gallery',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'manifesto', label: 'Clan of DE Editor', path: '/admin/manifesto',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
       </svg>
     ),
   },
@@ -189,6 +210,8 @@ export default function AdminDashboard() {
             <Route path="products" element={<AdminProducts />} />
             <Route path="categories" element={<AdminCategories />} />
             <Route path="homepage" element={<AdminHero />} />
+            <Route path="gallery" element={<AdminGallery />} />
+            <Route path="manifesto" element={<AdminManifesto />} />
             <Route path="reviews" element={<AdminReviews />} />
             <Route path="subscribers" element={<AdminSubscribers />} />
           </Routes>

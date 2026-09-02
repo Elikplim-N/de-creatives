@@ -196,3 +196,54 @@ export const adminCredentials = {
   username: 'admin',
   password: 'decreatives2024',
 };
+
+export const initialGalleryPhotos = [
+  { id: 1, src: '/products/tee-black-girl-palm.jpg', title: 'DE Signature Streetwear', category: 'Lookbook Drop 01', tag: 'God × Health × GOOD vibes' },
+  { id: 2, src: '/products/tee-white-back.jpg', title: 'Walk By Faith Classic', category: 'Back Print Edition', tag: 'Essentials' },
+  { id: 3, src: '/products/tee-black-duo-girls.jpg', title: 'Clan Duo Edition', category: 'Community', tag: 'Streetwear' },
+  { id: 4, src: '/products/tee-black-girl-garden.jpg', title: 'Garden Series Drop', category: 'Limited Edition', tag: 'Drop Shoulder' },
+  { id: 5, src: '/products/tee-black-girl-smile.jpg', title: 'Good Vibes Edition', category: 'Editorial', tag: 'Lifestyle' },
+  { id: 6, src: '/products/tee-black-girl-tree.jpg', title: 'Rooted in Culture', category: 'Streetwear', tag: 'Original Cut' },
+  { id: 7, src: '/products/tee-duo-white-black.jpg', title: 'Monochrome Twin Set', category: 'Set Edition', tag: 'Black & White' },
+  { id: 8, src: '/products/tee-black-girl-grass.jpg', title: 'Verdant Street Silhouette', category: 'Lookbook Drop 02', tag: 'Oversized Fit' },
+  { id: 9, src: '/products/tee-black-girl-smile2.jpg', title: 'Clean Bracket Framing', category: 'Essentials', tag: 'Signature' },
+];
+
+export const initialManifesto = {
+  heroBrand: 'Clan of DE',
+  heroTitle: 'Welcome to the Clan of DE 👋🏾',
+  heroTagline: 'God × Health × Good Vibes',
+  introGreeting: 'Hi there! 😃',
+  introLead: "So… you're here. Welcome to DE.\n\nYou're probably wondering, “What exactly is DE?”\n\nWell, it's pretty simple.",
+  slogan: 'God. Health. Good Vibes.',
+  pillars: [
+    {
+      id: 'god',
+      icon: '✝️',
+      title: 'God',
+      subtitle: 'Because God comes first. Always.',
+      body: 'We’re unapologetically Christian, and our faith is a huge part of who we are. DE is about expressing that faith, carrying it with you, and reminding ourselves that there’s more to life than what we see around us.'
+    },
+    {
+      id: 'health',
+      icon: '🩺',
+      title: 'Health',
+      subtitle: 'Because… well, I’m a doctor. 😂',
+      body: 'Health is a big part of my world, so naturally, it found its way into DE too.\n\nWe want to celebrate the people who spend their days caring for others — doctors, nurses, pharmacists, students, and everyone else in the healthcare family.'
+    },
+    {
+      id: 'vibes',
+      icon: '✌🏾',
+      title: 'Good Vibes',
+      subtitle: 'Because seriously… who doesn’t want good vibes?',
+      body: 'There’s already enough darkness, negativity and stress in the world.\n\nWe think a little more goodness, joy, kindness and positivity would do us all some good.\n\nAnd that’s what DE is about. Not just putting on a cool T-shirt. It’s about wearing something that represents what you believe, what you love, and the kind of energy you want to put into the world.'
+    }
+  ],
+  closingText: 'So yeah…\n\nWelcome to the Clan of DE. 🖤\n\nGrab a T-shirt. Wear it proudly. Start a conversation. Spread some goodness.\n\nAnd who knows?\n\nMaybe you’ll find a little piece of yourself in DE.',
+  animeEasterEgg: {
+    badge: '👀 But wait… there’s something you should know.',
+    heading: '“Clan of DE” has an anime reference.',
+    text: 'Yep. We hid one in there. 👀\n\nThink you know which anime?\n\nSend your guess to us on Instagram or drop us an email.\n\nNo cheating. 😂 Let’s see who catches it first.',
+    footerNote: 'Welcome to DE. God. Health. Good Vibes. Welcome to the clan.'
+  }
+};

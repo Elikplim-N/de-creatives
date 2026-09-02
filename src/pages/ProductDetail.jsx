@@ -12,18 +12,29 @@ export default function ProductDetail() {
 
   // Defensive fallbacks for Supabase arrays
   const images = product?.images || [];
-  const colors = product?.colors || [];
-  const colorNames = product?.colorNames || [];
-  const sizes = product?.sizes || ['S', 'M', 'L', 'XL'];
+  // Fit-specific size ranges
+  const REGULAR_FIT_SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
+  const DROP_SHOULDER_SIZES = ['S', 'M', 'L', 'XL', '2XL'];
 
-  const [selectedSize, setSelectedSize] = useState(sizes[0] || 'M');
-  const [selectedColor, setSelectedColor] = useState(0);
   const [selectedFit, setSelectedFit] = useState('Regular Fit'); // 'Regular Fit' or 'Drop Shoulder Fit'
+  const isDropShoulder = selectedFit === 'Drop Shoulder Fit';
+  const availableSizes = isDropShoulder ? DROP_SHOULDER_SIZES : REGULAR_FIT_SIZES;
+
+  const [selectedSize, setSelectedSize] = useState('M');
+  const [selectedColor, setSelectedColor] = useState(0);
   const [activeImage, setActiveImage] = useState(0);
   const [qty, setQty] = useState(1);
   const [sizeError, setSizeError] = useState(false);
   const [showSizeGuideModal, setShowSizeGuideModal] = useState(false);
   const [sizeUnit, setSizeUnit] = useState('in'); // 'in' or 'cm'
+
+  const handleFitChange = (fit) => {
+    setSelectedFit(fit);
+    const targetSizes = fit === 'Drop Shoulder Fit' ? DROP_SHOULDER_SIZES : REGULAR_FIT_SIZES;
+    if (!targetSizes.includes(selectedSize)) {
+      setSelectedSize('M');
+    }
+  };
 
   const [activeTab, setActiveTab] = useState('details');
 
@@ -40,7 +51,6 @@ export default function ProductDetail() {
     );
   }
 
-  const isDropShoulder = selectedFit === 'Drop Shoulder Fit';
   const currentUnitPrice = isDropShoulder ? 250.00 : product.price;
   const wishlisted = isInWishlist(product.id);
   const discount = product.comparePrice
@@ -149,22 +159,22 @@ export default function ProductDetail() {
                   <button
                     type="button"
                     className={`btn ${selectedFit === 'Regular Fit' ? 'btn-primary' : 'btn-outline'}`}
-                    onClick={() => setSelectedFit('Regular Fit')}
+                    onClick={() => handleFitChange('Regular Fit')}
                     style={{ padding: '10px 14px', fontSize: '0.82rem', textAlign: 'center', lineHeight: 1.3 }}
                   >
                     <div><strong>Regular Fit</strong></div>
-                    <div style={{ fontSize: '0.72rem', opacity: 0.85 }}>{formatPrice(product.price)}</div>
+                    <div style={{ fontSize: '0.72rem', opacity: 0.85 }}>{formatPrice(product.price)} (up to 4XL)</div>
                   </button>
 
                   <button
                     type="button"
                     className={`btn ${selectedFit === 'Drop Shoulder Fit' ? 'btn-primary' : 'btn-outline'}`}
-                    onClick={() => setSelectedFit('Drop Shoulder Fit')}
+                    onClick={() => handleFitChange('Drop Shoulder Fit')}
                     style={{ padding: '10px 14px', fontSize: '0.82rem', textAlign: 'center', lineHeight: 1.3 }}
                   >
                     <div><strong>Drop Shoulder Fit</strong></div>
                     <div style={{ fontSize: '0.72rem', color: selectedFit === 'Drop Shoulder Fit' ? '#000' : 'var(--turquoise)' }}>
-                      GH₵ 250.00
+                      GH₵ 250.00 (up to 2XL)
                     </div>
                   </button>
                 </div>
@@ -196,13 +206,15 @@ export default function ProductDetail() {
               {/* Size Selection */}
               <div className="product-detail__section">
                 <div className="product-detail__section-header">
-                  <span className="product-detail__section-label">Size ({selectedSize})</span>
+                  <span className="product-detail__section-label">
+                    Size ({selectedSize}) — <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{selectedFit === 'Regular Fit' ? 'S to 4XL' : 'S to 2XL'}</span>
+                  </span>
                   <button type="button" onClick={() => setShowSizeGuideModal(true)} className="product-detail__size-guide">
                     📏 Size Guide →
                   </button>
                 </div>
                 <div className={`product-detail__sizes${sizeError ? ' product-detail__sizes--error' : ''}`}>
-                  {sizes.map(size => (
+                  {availableSizes.map(size => (
                     <button
                       key={size}
                       className={`product-detail__size-btn${selectedSize === size ? ' product-detail__size-btn--active' : ''}`}
@@ -216,7 +228,7 @@ export default function ProductDetail() {
                 {sizeError && <p className="product-detail__size-error">Please select a size</p>}
               </div>
 
-              {/* Quantity + Add to Cart + WhatsApp CTA */}
+              {/* Quantity + Add to Cart */}
               <div className="product-detail__ctas">
                 <div className="product-detail__qty">
                   <button
@@ -252,63 +264,38 @@ export default function ProductDetail() {
                 </button>
               </div>
 
-              {/* Direct WhatsApp Order */}
-              <div style={{ marginTop: '12px' }}>
-                <button
-                  type="button"
-                  className="btn btn-outline btn-lg"
-                  onClick={handleWhatsAppOrder}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '10px',
-                    borderColor: '#25D366',
-                    color: '#25D366',
-                    background: 'rgba(37, 211, 102, 0.05)',
-                    padding: '14px 20px',
-                    fontSize: '1rem',
-                    fontWeight: 600
-                  }}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.324 5.328 0 11.859 0c3.161.001 6.132 1.233 8.368 3.472 2.235 2.24 3.461 5.215 3.46 8.378-.003 6.536-5.328 11.86-11.859 11.86-2.007-.001-3.98-.513-5.736-1.489L0 24zm6.59-4.846c1.666.988 3.311 1.485 5.26 1.486 5.417 0 9.825-4.414 9.827-9.836.001-2.627-1.02-5.1-2.874-6.958C16.99 1.888 14.5.86 11.862.86c-5.42 0-9.829 4.415-9.831 9.837-.001 1.887.493 3.73 1.427 5.33L2.454 21.5l5.59-1.465zM17.15 14.4c-.29-.145-1.713-.846-1.978-.942-.265-.096-.458-.145-.65.145-.193.29-.747.942-.916 1.132-.169.19-.338.212-.627.067-.29-.145-1.22-.45-2.325-1.434-.86-.767-1.44-1.714-1.61-2.004-.168-.29-.018-.446.126-.59.13-.13.29-.338.434-.508.145-.17.193-.29.29-.483.096-.19.048-.36-.024-.506-.072-.145-.65-1.568-.89-2.146-.233-.563-.47-.487-.65-.496-.168-.008-.362-.01-.555-.01-.193 0-.506.072-.77.36-.266.29-1.013.99-1.013 2.413 0 1.42 1.037 2.793 1.18 2.987.145.195 2.04 3.115 4.94 4.37.69.298 1.229.477 1.65.612.693.22 1.324.19 1.823.115.556-.08 1.713-.7 1.953-1.375.24-.675.24-1.255.17-1.375-.07-.12-.266-.19-.556-.335z"/>
-                  </svg>
-                  Text to Order (WhatsApp)
-                </button>
-              </div>
+              {/* Secondary WhatsApp direct order CTA */}
+              <button
+                type="button"
+                className="btn btn-outline product-detail__wa-btn"
+                onClick={handleWhatsAppOrder}
+              >
+                <span>💬</span> Text to Order on WhatsApp
+              </button>
 
-              <div className="product-detail__divider divider" />
-
-              {/* SOG-style details tabs */}
-              <div className="product-detail__tabs-wrap">
-                <div className="product-detail__tabs" role="tablist">
+              {/* Tabs */}
+              <div className="product-detail__tabs">
+                <div className="product-detail__tab-list" role="tablist">
                   <button
                     className={`product-detail__tab-btn${activeTab === 'details' ? ' active' : ''}`}
                     onClick={() => setActiveTab('details')}
                     role="tab"
                     aria-selected={activeTab === 'details'}
-                  >
-                    Details
-                  </button>
+                  >Details</button>
                   <button
                     className={`product-detail__tab-btn${activeTab === 'shipping' ? ' active' : ''}`}
                     onClick={() => setActiveTab('shipping')}
                     role="tab"
                     aria-selected={activeTab === 'shipping'}
-                  >
-                    Order & MoMo
-                  </button>
+                  >Dispatch & Payment</button>
                   <button
                     className={`product-detail__tab-btn${activeTab === 'sizing' ? ' active' : ''}`}
                     onClick={() => setActiveTab('sizing')}
                     role="tab"
                     aria-selected={activeTab === 'sizing'}
-                  >
-                    Sizing
-                  </button>
+                  >Size Chart</button>
                 </div>
+
                 <div className="product-detail__tab-content">
                   {activeTab === 'details' && (
                     <div className="product-detail__tab-pane">
@@ -319,14 +306,16 @@ export default function ProductDetail() {
                   )}
                   {activeTab === 'shipping' && (
                     <div className="product-detail__tab-pane">
-                      <p className="product-detail__description"><strong>🚚 Fast Dispatch:</strong> Orders are dispatched within 24 to 48 hours in Accra & nationwide.</p>
+                      <p className="product-detail__description"><strong>🚚 Fast Dispatch:</strong> Orders are dispatched within 24 to 48 hours in Accra.</p>
                       <p className="product-detail__description" style={{ marginTop: '0.5rem' }}><strong>📱 Mobile Money:</strong> Pay easily via MTN Mobile Money (MoMo) or Telecel Cash.</p>
-                      <p className="product-detail__description" style={{ marginTop: '0.5rem' }}><strong>💬 Direct Ordering:</strong> Tap "Text to Order (WhatsApp)" to place your order directly.</p>
+                      <p className="product-detail__description" style={{ marginTop: '0.5rem' }}><strong>💬 Direct Ordering:</strong> Tap "Text to Order on WhatsApp" to place your order directly.</p>
                     </div>
                   )}
                   {activeTab === 'sizing' && (
                     <div className="product-detail__tab-pane">
-                      <p className="product-detail__description">Available in Standard Regular Fit and Oversized Drop Shoulder Fit (250 GH₵). Click below to view the comprehensive size guide.</p>
+                      <p className="product-detail__description">
+                        Available in Regular Fit (S to 4XL) and Oversized Drop Shoulder Fit (S to 2XL, GH₵ 250). Click below to view the full size chart.
+                      </p>
                       <button
                         type="button"
                         className="btn btn-outline btn-sm"
@@ -375,7 +364,7 @@ export default function ProductDetail() {
                   DE CREATIVES SIZE GUIDE
                 </h3>
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>
-                  Standard Regular & Drop Shoulder Silhouettes
+                  Regular Fit (S–4XL) & Drop Shoulder Fit (S–2XL)
                 </p>
               </div>
               <button
@@ -413,7 +402,7 @@ export default function ProductDetail() {
 
             {/* Regular Fit Table */}
             <h4 style={{ color: 'var(--turquoise)', fontFamily: 'var(--font-accent)', fontSize: '0.85rem', marginBottom: '8px', letterSpacing: '0.04em' }}>
-              1. REGULAR FIT TEES
+              1. REGULAR FIT TEES (S to 4XL)
             </h4>
             <div style={{ overflowX: 'auto', marginBottom: '24px' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
@@ -427,12 +416,13 @@ export default function ProductDetail() {
                 </thead>
                 <tbody>
                   {[
-                    { size: 'XS', chestIn: '38', chestCm: '96', lenIn: '26.5', lenCm: '67', shIn: '17', shCm: '43' },
                     { size: 'S', chestIn: '40', chestCm: '102', lenIn: '27.5', lenCm: '70', shIn: '18', shCm: '46' },
                     { size: 'M', chestIn: '42', chestCm: '107', lenIn: '28.5', lenCm: '72', shIn: '19', shCm: '48' },
                     { size: 'L', chestIn: '44', chestCm: '112', lenIn: '29.5', lenCm: '75', shIn: '20', shCm: '51' },
                     { size: 'XL', chestIn: '46', chestCm: '117', lenIn: '30.5', lenCm: '77', shIn: '21', shCm: '53' },
-                    { size: 'XXL', chestIn: '48', chestCm: '122', lenIn: '31.5', lenCm: '80', shIn: '22', shCm: '56' },
+                    { size: '2XL', chestIn: '48', chestCm: '122', lenIn: '31.5', lenCm: '80', shIn: '22', shCm: '56' },
+                    { size: '3XL', chestIn: '50', chestCm: '127', lenIn: '32.5', lenCm: '83', shIn: '23', shCm: '58' },
+                    { size: '4XL', chestIn: '52', chestCm: '132', lenIn: '33.5', lenCm: '85', shIn: '24', shCm: '61' },
                   ].map((row, i) => (
                     <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
                       <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--white)' }}>{row.size}</td>
@@ -447,7 +437,7 @@ export default function ProductDetail() {
 
             {/* Drop Shoulder Fit Table */}
             <h4 style={{ color: 'var(--turquoise)', fontFamily: 'var(--font-accent)', fontSize: '0.85rem', marginBottom: '8px', letterSpacing: '0.04em' }}>
-              2. DROP SHOULDER FIT TEES (GH₵ 250)
+              2. DROP SHOULDER FIT TEES — GH₵ 250 (S to 2XL)
             </h4>
             <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
@@ -465,7 +455,7 @@ export default function ProductDetail() {
                     { size: 'M', chestIn: '46', chestCm: '117', lenIn: '29.0', lenCm: '74', shIn: '23.5', shCm: '60' },
                     { size: 'L', chestIn: '48', chestCm: '122', lenIn: '30.0', lenCm: '76', shIn: '24.5', shCm: '62' },
                     { size: 'XL', chestIn: '50', chestCm: '127', lenIn: '31.0', lenCm: '79', shIn: '25.5', shCm: '65' },
-                    { size: 'XXL', chestIn: '52', chestCm: '132', lenIn: '32.0', lenCm: '81', shIn: '26.5', shCm: '67' },
+                    { size: '2XL', chestIn: '52', chestCm: '132', lenIn: '32.0', lenCm: '81', shIn: '26.5', shCm: '67' },
                   ].map((row, i) => (
                     <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
                       <td style={{ padding: '8px 12px', fontWeight: 600, color: 'var(--white)' }}>{row.size}</td>
@@ -479,7 +469,7 @@ export default function ProductDetail() {
             </div>
 
             <div style={{ background: 'var(--white-05)', padding: '12px', borderRadius: '6px', fontSize: '0.75rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-              💡 <strong>Fitting Tip:</strong> If you prefer a standard streetwear silhouette, stick with your normal size. For a signature exaggerated streetwear drape, our Drop Shoulder cut offers dropped armholes and wider sleeves.
+              💡 <strong>Fitting Tip:</strong> Regular Fit extends from S up to 4XL for standard streetwear drape. Drop Shoulder Fit offers dropped armholes and wider sleeves (available from S to 2XL).
             </div>
 
             <button

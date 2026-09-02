@@ -2,20 +2,11 @@ import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import './Gallery.css';
 
-const galleryPhotos = [
-  { id: 1, src: '/products/tee-black-girl-palm.jpg', title: 'DE Signature Streetwear', category: 'Lookbook Drop 01', tag: 'God × Health × GOOD vibes' },
-  { id: 2, src: '/products/tee-white-back.jpg', title: 'Walk By Faith Classic', category: 'Back Print Edition', tag: 'Essentials' },
-  { id: 3, src: '/products/tee-black-duo-girls.jpg', title: 'Clan Duo Edition', category: 'Community', tag: 'Streetwear' },
-  { id: 4, src: '/products/tee-black-girl-garden.jpg', title: 'Garden Series Drop', category: 'Limited Edition', tag: 'Drop Shoulder' },
-  { id: 5, src: '/products/tee-black-girl-smile.jpg', title: 'Good Vibes Edition', category: 'Editorial', tag: 'Lifestyle' },
-  { id: 6, src: '/products/tee-black-girl-tree.jpg', title: 'Rooted in Culture', category: 'Streetwear', tag: 'Original Cut' },
-  { id: 7, src: '/products/tee-duo-white-black.jpg', title: 'Monochrome Twin Set', category: 'Set Edition', tag: 'Black & White' },
-  { id: 8, src: '/products/tee-black-girl-grass.jpg', title: 'Verdant Street Silhouette', category: 'Lookbook Drop 02', tag: 'Oversized Fit' },
-  { id: 9, src: '/products/tee-black-girl-smile2.jpg', title: 'Clean Bracket Framing', category: 'Essentials', tag: 'Signature' },
-];
-
 export default function Gallery() {
+  const { galleryPhotos } = useApp();
   const [activePhoto, setActivePhoto] = useState(null);
+
+  const displayPhotos = galleryPhotos && galleryPhotos.length > 0 ? galleryPhotos : [];
 
   return (
     <section className="gallery-section" id="gallery" aria-label="Visual gallery and lookbook">
@@ -25,7 +16,7 @@ export default function Gallery() {
             VISUAL LOOKBOOK
           </p>
           <h2 className="section-heading" style={{ marginTop: '0.5rem' }}>
-            THE DE <span style={{ color: 'var(--turquoise)' }}>GALLERY</span>
+            THE GALLERY OF <span style={{ color: 'var(--turquoise)' }}>DE</span>
           </h2>
           <p className="gallery-section__subtitle">
             A visual archive of style, faith, and identity. Shot across Ghana.
@@ -33,7 +24,7 @@ export default function Gallery() {
         </div>
 
         <div className="gallery-grid">
-          {galleryPhotos.map((photo, i) => (
+          {displayPhotos.map((photo, i) => (
             <div
               key={photo.id}
               className={`gallery-item gallery-item--${(i % 5 === 0) ? 'wide' : (i % 3 === 0) ? 'tall' : 'normal'}`}
