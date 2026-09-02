@@ -223,15 +223,21 @@ h1,h2,h3,h4,h5,h6 { font-weight: 700; line-height: 1.15; }
   gap: var(--space-2);
   font-family: var(--font-accent);
   font-weight: 600;
-  font-size: 0.875rem;
-  letter-spacing: 0.05em;
+  font-size: clamp(0.75rem, 1.8vw, 0.85rem);
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 14px 32px;
+  padding: clamp(10px, 2.2vw, 13px) clamp(18px, 3.5vw, 30px);
   border-radius: var(--radius-sm);
   transition: all var(--transition-base);
   position: relative;
   overflow: hidden;
-  white-space: nowrap;
+  text-decoration: none;
+  min-height: 44px;
+  line-height: 1.25;
+  text-align: center;
+  text-wrap: balance;
+  max-width: 100%;
+  cursor: pointer;
 }
 .btn::after {
   content: '';
@@ -277,9 +283,22 @@ h1,h2,h3,h4,h5,h6 { font-weight: 700; line-height: 1.15; }
   border-color: var(--turquoise);
 }
 
-.btn-sm { padding: 10px 20px; font-size: 0.8rem; }
-.btn-lg { padding: 18px 48px; font-size: 1rem; }
-.btn-icon { padding: 12px; aspect-ratio: 1; }
+.btn-sm {
+  padding: clamp(6px, 1.5vw, 8px) clamp(12px, 2.5vw, 18px);
+  font-size: clamp(0.7rem, 1.5vw, 0.78rem);
+  min-height: 38px;
+}
+.btn-lg {
+  padding: clamp(13px, 2.8vw, 17px) clamp(22px, 4vw, 42px);
+  font-size: clamp(0.85rem, 2vw, 0.95rem);
+  min-height: 48px;
+}
+.btn-icon {
+  padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
+  aspect-ratio: 1;
+}
 .btn-danger { background: var(--danger); color: white; }
 .btn-danger:hover { background: #dc2626; transform: translateY(-1px); }
 .btn-success { background: var(--success); color: white; }
@@ -524,5 +543,40 @@ h1,h2,h3,h4,h5,h6 { font-weight: 700; line-height: 1.15; }
   :root { --nav-height: 64px; }
 }
 @media (max-width: 768px) {
-  .btn-lg { padding: 16px 32px; font-size: 0.9rem; }
+  .btn {
+    padding: 10px 20px;
+    font-size: 0.8rem;
+    min-height: 42px;
+  }
+  .btn-lg {
+    padding: 12px 26px;
+    font-size: 0.85rem;
+    min-height: 46px;
+  }
+  .btn-sm {
+    padding: 6px 14px;
+    font-size: 0.72rem;
+  }
+}
+@media (max-width: 480px) {
+  .btn {
+    padding: 10px 16px;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+  }
+  .btn-lg {
+    padding: 12px 20px;
+    font-size: 0.82rem;
+  }
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 0.7rem;
+  }
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    min-width: 0;
+    width: auto;
+  }
 }
