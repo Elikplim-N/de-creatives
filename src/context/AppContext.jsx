@@ -10,6 +10,7 @@ import {
   adminCredentials
 } from '../data/mockData';
 import { supabase } from '../lib/supabaseClient';
+import { api } from '../lib/apiClient';
 
 const AppContext = createContext(null);
 
@@ -19,14 +20,14 @@ const AppContext = createContext(null);
 function formatDbProduct(p, categoryList) {
   return {
     ...p,
-    category: p.category_id,
-    categoryName: categoryList?.find(c => c.id === p.category_id)?.name || 'Uncategorized',
-    comparePrice: p.compare_price,
-    reviewCount: p.review_count,
-    isNew: p.is_new,
-    isFeatured: p.is_featured,
-    isBestseller: p.is_bestseller,
-    colorNames: p.color_names,
+    category: p.category_id || p.category,
+    categoryName: categoryList?.find(c => c.id === (p.category_id || p.category))?.name || 'Uncategorized',
+    comparePrice: p.compare_price ?? p.comparePrice,
+    reviewCount: p.review_count ?? p.reviewCount,
+    isNew: p.is_new ?? p.isNew,
+    isFeatured: p.is_featured ?? p.isFeatured,
+    isBestseller: p.is_bestseller ?? p.isBestseller,
+    colorNames: p.color_names || p.colorNames,
   };
 }
 
@@ -43,56 +44,47 @@ const PRODUCT_FIELD_TO_COLUMN = {
   colorNames: 'color_names',
 };
 
-// Product objects carry both raw snake_case DB fields (formatDbProduct
-// spreads the row as-is) and the camelCase aliases above, and admin forms
-// round-trip the whole object back on save - so anything not a real
-// de_products column must be dropped here rather than mapped, or a single
-// missed alias above 400s the entire update (as reviewCount once did).
-const PRODUCT_DB_COLUMNS = new Set([
-  'sku', 'name', 'category_id', 'price', 'compare_price', 'description',
-  'colors', 'color_names', 'sizes', 'stock', 'is_new', 'is_featured',
-  'is_bestseller', 'rating', 'review_count', 'images',
-]);
-
-function toDbProductFields(fields) {
+// Converts camelCase fields from the UI to snake_case DB columns, dropping
+// any field that doesn't correspond to a real de_products column.
+function toDbProductFields(updates) {
   const dbFields = {};
-  for (const [key, value] of Object.entries(fields)) {
-    const column = PRODUCT_FIELD_TO_COLUMN[key] || key;
-    if (!PRODUCT_DB_COLUMNS.has(column)) continue;
-    dbFields[column] = value;
+  for (const [key, value] of Object.entries(updates)) {
+    if (key === 'categoryName') continue; // UI-only derived field
+    const dbCol = PRODUCT_FIELD_TO_COLUMN[key] || key;
+    dbFields[dbCol] = value;
   }
-  if ('category' in fields) dbFields.category_id = fields.category || null;
   return dbFields;
 }
 
-// Bridges de_hero_slides' snake_case DB columns to the camelCase fields the
-// Hero carousel and admin form read.
 function formatDbHeroSlide(s) {
   return {
-    ...s,
-    ctaSecondary: s.cta_secondary,
-    sortOrder: s.sort_order,
-    isActive: s.is_active,
+    id: s.id,
+    eyebrow: s.eyebrow,
+    heading: s.heading,
+    subheading: s.subheading,
+    cta: s.cta,
+    ctaSecondary: s.cta_secondary || s.ctaSecondary,
+    image: s.image,
+    sortOrder: s.sort_order ?? s.sortOrder,
+    isActive: s.is_active ?? s.isActive ?? true,
+    createdAt: s.created_at || s.createdAt,
   };
 }
 
-const HERO_SLIDE_FIELD_TO_COLUMN = {
-  ctaSecondary: 'cta_secondary',
-  sortOrder: 'sort_order',
-  isActive: 'is_active',
-};
-
-function toDbHeroSlideFields(fields) {
+function toDbHeroSlideFields(updates) {
   const dbFields = {};
-  for (const [key, value] of Object.entries(fields)) {
-    dbFields[HERO_SLIDE_FIELD_TO_COLUMN[key] || key] = value;
+  for (const [key, value] of Object.entries(updates)) {
+    if (key === 'ctaSecondary') dbFields.cta_secondary = value;
+    else if (key === 'sortOrder') dbFields.sort_order = value;
+    else if (key === 'isActive') dbFields.is_active = value;
+    else dbFields[key] = value;
   }
   return dbFields;
 }
 
 export function AppProvider({ children }) {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [authLoading, setAuthLoading] = useState(!!supabase);
+  const [authLoading, setAuthLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [products, setProducts] = useState(() => {
     const saved = localStorage.getItem('de_products');
@@ -123,10 +115,7 @@ export function AppProvider({ children }) {
     const saved = localStorage.getItem('de_manifesto');
     return saved ? JSON.parse(saved) : initialManifesto;
   });
-  const [pendingTestimonials, setPendingTestimonials] = useState(() => {
-    const saved = localStorage.getItem('de_pending_testimonials');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [pendingTestimonials, setPendingTestimonials] = useState([]);
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [toast, setToast] = useState(null);
@@ -138,72 +127,80 @@ export function AppProvider({ children }) {
     setTimeout(() => setToast(null), 3000);
   }, []);
 
-  // Fetch initial data from Supabase if available
+  // Fetch initial data from Backend API or Supabase
   useEffect(() => {
-    if (!supabase) return;
-
     const loadData = async () => {
       try {
-        // Fetch Categories from de_categories
-        const { data: catData, error: catError } = await supabase
-          .from('de_categories')
-          .select('*');
-        if (catError) throw catError;
-        if (catData) setCategories(catData);
-
-        // Fetch Products from de_products
-        const { data: prodData, error: prodError } = await supabase
-          .from('de_products')
-          .select('*');
-        if (prodError) throw prodError;
-        if (prodData) {
-          setProducts(prodData.map(p => formatDbProduct(p, catData)));
-        }
-
-        // Fetch approved Testimonials from de_testimonials.
-        // If the DB has 0 approved testimonials, keep the curated initialTestimonials
-        // so the Good Report section is never left blank.
-        const { data: testData, error: testError } = await supabase
-          .from('de_testimonials')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(9);
-        if (testError) throw testError;
-        if (testData && testData.length > 0) {
-          setTestimonials(testData);
-        } else {
-          setTestimonials(initialTestimonials);
-        }
-
-        // Fetch Hero Slides from de_hero_slides
-        const { data: heroData, error: heroError } = await supabase
-          .from('de_hero_slides')
-          .select('*')
-          .order('sort_order', { ascending: true });
-        if (heroError) throw heroError;
-        if (heroData) setHeroSlides(heroData.map(formatDbHeroSlide));
-
-        // Fetch Subscribers if table exists
+        let catList = [];
         try {
-          const { data: subData } = await supabase
-            .from('de_subscribers')
-            .select('*')
-            .order('created_at', { ascending: false });
-          if (subData && subData.length > 0) {
+          const catData = await api.getCategories();
+          if (Array.isArray(catData)) {
+            catList = catData;
+            setCategories(catData);
+            localStorage.setItem('de_categories', JSON.stringify(catData));
+          }
+
+          const prodData = await api.getProducts();
+          if (Array.isArray(prodData)) {
+            const formatted = prodData.map(p => formatDbProduct(p, catList));
+            setProducts(formatted);
+            localStorage.setItem('de_products', JSON.stringify(formatted));
+          }
+
+          const heroData = await api.getHeroSlides();
+          if (Array.isArray(heroData)) {
+            const formatted = heroData.map(formatDbHeroSlide);
+            setHeroSlides(formatted);
+            localStorage.setItem('de_hero_slides', JSON.stringify(formatted));
+          }
+
+          const testData = await api.getTestimonials(true);
+          if (Array.isArray(testData) && testData.length > 0) {
+            setTestimonials(testData.filter(t => t.is_approved));
+            setPendingTestimonials(testData.filter(t => !t.is_approved));
+          }
+
+          const subData = await api.getSubscribers();
+          if (Array.isArray(subData) && subData.length > 0) {
             setSubscribers(subData);
           }
-        } catch {
-          // Table might not exist yet
+
+          const maniData = await api.getManifesto();
+          if (maniData && typeof maniData === 'object') {
+            setManifesto(maniData);
+            localStorage.setItem('de_manifesto', JSON.stringify(maniData));
+          }
+          return;
+        } catch (apiErr) {
+          console.warn('Backend API fetch fallback:', apiErr.message);
+        }
+
+        if (supabase) {
+          const { data: cData } = await supabase.from('de_categories').select('*');
+          if (cData) { setCategories(cData); localStorage.setItem('de_categories', JSON.stringify(cData)); }
+          const { data: pData } = await supabase.from('de_products').select('*');
+          if (pData) {
+            const formatted = pData.map(p => formatDbProduct(p, cData));
+            setProducts(formatted);
+            localStorage.setItem('de_products', JSON.stringify(formatted));
+          }
+          const { data: hData } = await supabase.from('de_hero_slides').select('*').order('sort_order', { ascending: true });
+          if (hData) {
+            const formatted = hData.map(formatDbHeroSlide);
+            setHeroSlides(formatted);
+            localStorage.setItem('de_hero_slides', JSON.stringify(formatted));
+          }
         }
       } catch (err) {
-        console.error('Error fetching data from Supabase:', err.message);
-        showToast('Connected but failed to fetch data from Supabase. Using mock data.', 'warning');
+        console.error('Error loading data:', err.message);
       }
     };
 
     loadData();
+  }, []);
 
-    // Listen for auth state changes to keep dashboard synced.
+  useEffect(() => {
+    if (!supabase) return;
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAdminLoggedIn(!!session);
       setAuthLoading(false);
@@ -364,315 +361,229 @@ export function AppProvider({ children }) {
   }, []);
 
   const addProduct = useCallback(async (product) => {
-    if (supabase) {
-      try {
-        const id = `p-${Date.now()}`;
-        const newProductDb = {
-          ...toDbProductFields(product),
-          id,
-          sku: product.sku || `DE-${Date.now()}`,
-          price: parseFloat(product.price),
-          compare_price: product.comparePrice ? parseFloat(product.comparePrice) : null,
-          stock: parseInt(product.stock) || 0,
-          is_new: product.isNew ?? true,
-          is_featured: product.isFeatured ?? false,
-          is_bestseller: product.isBestseller ?? false,
-          colors: product.colors?.length > 0 ? product.colors : ['#0A0A0A'],
-          color_names: product.colorNames?.length > 0 ? product.colorNames : ['Default Jet Black'],
-          sizes: product.sizes?.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL'],
-          images: product.images || [],
-          rating: 5.0,
-          review_count: 0
-        };
+    const id = product.id || `p-${Date.now()}`;
+    const newProduct = {
+      ...product,
+      id,
+      sku: product.sku || `DE-${Date.now()}`,
+      price: parseFloat(product.price) || 200,
+      comparePrice: product.comparePrice ? parseFloat(product.comparePrice) : null,
+      stock: parseInt(product.stock) || 0,
+      isNew: product.isNew ?? true,
+      isFeatured: product.isFeatured ?? false,
+      isBestseller: product.isBestseller ?? false,
+      colors: product.colors?.length > 0 ? product.colors : ['#0A0A0A'],
+      colorNames: product.colorNames?.length > 0 ? product.colorNames : ['Default Jet Black'],
+      sizes: product.sizes?.length > 0 ? product.sizes : ['S', 'M', 'L', 'XL'],
+      images: product.images || [],
+      rating: 5.0,
+      reviewCount: 0
+    };
 
-        const { error } = await supabase.from('de_products').insert([newProductDb]);
-        if (error) throw error;
-
-        // update local state and localStorage
-        const formatted = formatDbProduct(newProductDb, categories);
-        setProducts(prev => {
-          const next = [formatted, ...prev];
-          localStorage.setItem('de_products', JSON.stringify(next));
-          return next;
-        });
-
-        showToast(`"${product.name}" added to Supabase!`, 'success');
-      } catch (err) {
-        console.error('Error adding product:', err.message);
-        showToast(`Failed to add product: ${err.message}`, 'danger');
+    try {
+      await api.createProduct(newProduct);
+    } catch (e) {
+      if (supabase) {
+        try {
+          await supabase.from('de_products').insert([toDbProductFields(newProduct)]);
+        } catch (sErr) { console.error('Supabase write error:', sErr); }
       }
-    } else {
-      // Mock mode
-      const newProduct = {
-        ...product,
-        id: `p-${Date.now()}`,
-        sku: product.sku || `DE-${Date.now()}`,
-        rating: 0, reviewCount: 0,
-        isNew: product.isNew ?? true,
-        isFeatured: product.isFeatured ?? false,
-        isBestseller: product.isBestseller ?? false,
-        images: product.images || [],
-        colors: product.colors?.length > 0 ? product.colors : ['#1A1A1A'],
-        colorNames: product.colorNames?.length > 0 ? product.colorNames : ['Default'],
-      };
-      setProducts(prev => {
-        const next = [newProduct, ...prev];
-        localStorage.setItem('de_products', JSON.stringify(next));
-        return next;
-      });
-      showToast(`"${product.name}" added successfully!`, 'success');
     }
+
+    const formatted = formatDbProduct(newProduct, categories);
+    setProducts(prev => {
+      const next = [formatted, ...prev.filter(p => p.id !== id)];
+      localStorage.setItem('de_products', JSON.stringify(next));
+      return next;
+    });
+    showToast(`"${product.name}" added successfully!`, 'success');
   }, [categories, showToast]);
 
   const updateProduct = useCallback(async (id, updates) => {
-    if (supabase) {
-      try {
-        const dbUpdates = toDbProductFields(updates);
-
-        const { error } = await supabase.from('de_products').update(dbUpdates).eq('id', id);
-        if (error) throw error;
-
-        setProducts(prev => {
-          const next = prev.map(p => {
-            if (p.id === id) {
-              const merged = { ...p, ...updates };
-              if ('category' in updates) {
-                merged.categoryName = categories.find(c => c.id === updates.category)?.name || 'Uncategorized';
-              }
-              return merged;
-            }
-            return p;
-          });
-          localStorage.setItem('de_products', JSON.stringify(next));
-          return next;
-        });
-        showToast('Product updated in Supabase!', 'success');
-      } catch (err) {
-        console.error('Error updating product:', err.message);
-        showToast(`Failed to update product: ${err.message}`, 'danger');
+    try {
+      await api.updateProduct({ id, ...updates });
+    } catch (e) {
+      if (supabase) {
+        try {
+          await supabase.from('de_products').update(toDbProductFields(updates)).eq('id', id);
+        } catch (sErr) { console.error('Supabase write error:', sErr); }
       }
-    } else {
-      setProducts(prev => {
-        const next = prev.map(p => p.id === id ? { ...p, ...updates } : p);
-        localStorage.setItem('de_products', JSON.stringify(next));
-        return next;
-      });
-      showToast('Product updated successfully!', 'success');
     }
+
+    setProducts(prev => {
+      const next = prev.map(p => {
+        if (p.id === id) {
+          const merged = { ...p, ...updates };
+          if ('category' in updates) {
+            merged.categoryName = categories.find(c => c.id === updates.category)?.name || 'Uncategorized';
+          }
+          return merged;
+        }
+        return p;
+      });
+      localStorage.setItem('de_products', JSON.stringify(next));
+      return next;
+    });
+    showToast('Product updated successfully!', 'success');
   }, [categories, showToast]);
 
   const deleteProduct = useCallback(async (id) => {
     const product = products.find(p => p.id === id);
-    if (supabase) {
-      try {
-        const { error } = await supabase.from('de_products').delete().eq('id', id);
-        if (error) throw error;
-
-        setProducts(prev => {
-          const next = prev.filter(p => p.id !== id);
-          localStorage.setItem('de_products', JSON.stringify(next));
-          return next;
-        });
-        showToast(`"${product?.name}" removed from Supabase.`, 'danger');
-      } catch (err) {
-        console.error('Error deleting product:', err.message);
-        showToast(`Failed to delete product: ${err.message}`, 'danger');
+    try {
+      await api.deleteProduct(id);
+    } catch (e) {
+      if (supabase) {
+        try {
+          await supabase.from('de_products').delete().eq('id', id);
+        } catch (sErr) { console.error('Supabase delete error:', sErr); }
       }
-    } else {
-      setProducts(prev => {
-        const next = prev.filter(p => p.id !== id);
-        localStorage.setItem('de_products', JSON.stringify(next));
-        return next;
-      });
-      showToast(`"${product?.name}" removed.`, 'danger');
     }
+
+    setProducts(prev => {
+      const next = prev.filter(p => p.id !== id);
+      localStorage.setItem('de_products', JSON.stringify(next));
+      return next;
+    });
+    showToast(`"${product?.name || 'Product'}" removed.`, 'danger');
   }, [products, showToast]);
 
   const addCategory = useCallback(async (category) => {
-    if (supabase) {
-      try {
-        const id = `cat-${Date.now()}`;
-        const newCat = {
-          id,
-          name: category.name,
-          slug: category.slug || category.name.toLowerCase().replace(/\s+/g, '-'),
-          description: category.description,
-          image: category.image || null,
-        };
+    const id = category.id || `cat-${Date.now()}`;
+    const newCat = {
+      ...category,
+      id,
+      slug: category.slug || category.name.toLowerCase().replace(/\s+/g, '-'),
+      description: category.description || '',
+      image: category.image || '',
+    };
 
-        const { error } = await supabase.from('de_categories').insert([newCat]);
-        if (error) throw error;
-
-        setCategories(prev => {
-          const next = [...prev, newCat];
-          localStorage.setItem('de_categories', JSON.stringify(next));
-          return next;
-        });
-        showToast(`Category "${category.name}" added to Supabase!`, 'success');
-      } catch (err) {
-        console.error('Error adding category:', err.message);
-        showToast(`Failed to add category: ${err.message}`, 'danger');
+    try {
+      await api.createCategory(newCat);
+    } catch (e) {
+      if (supabase) {
+        try {
+          await supabase.from('de_categories').insert([newCat]);
+        } catch (sErr) { console.error('Supabase write error:', sErr); }
       }
-    } else {
-      const newCat = {
-        ...category,
-        id: `cat-${Date.now()}`,
-        count: 0,
-      };
-      setCategories(prev => {
-        const next = [...prev, newCat];
-        localStorage.setItem('de_categories', JSON.stringify(next));
-        return next;
-      });
-      showToast(`Category "${category.name}" added!`, 'success');
     }
+
+    setCategories(prev => {
+      const next = [...prev.filter(c => c.id !== id), newCat];
+      localStorage.setItem('de_categories', JSON.stringify(next));
+      return next;
+    });
+    showToast(`Category "${category.name}" added!`, 'success');
   }, [showToast]);
 
   const updateCategory = useCallback(async (id, updates) => {
-    if (supabase) {
-      try {
-        const { error } = await supabase.from('de_categories').update(updates).eq('id', id);
-        if (error) throw error;
-
-        setCategories(prev => {
-          const next = prev.map(c => c.id === id ? { ...c, ...updates } : c);
-          localStorage.setItem('de_categories', JSON.stringify(next));
-          return next;
-        });
-        showToast('Category updated!', 'success');
-      } catch (err) {
-        console.error('Error updating category:', err.message);
-        showToast(`Failed to update category: ${err.message}`, 'danger');
+    try {
+      await api.updateCategory({ id, ...updates });
+    } catch (e) {
+      if (supabase) {
+        try {
+          await supabase.from('de_categories').update(updates).eq('id', id);
+        } catch (sErr) { console.error('Supabase write error:', sErr); }
       }
-    } else {
-      setCategories(prev => {
-        const next = prev.map(c => c.id === id ? { ...c, ...updates } : c);
-        localStorage.setItem('de_categories', JSON.stringify(next));
-        return next;
-      });
-      showToast('Category updated!', 'success');
     }
+
+    setCategories(prev => {
+      const next = prev.map(c => c.id === id ? { ...c, ...updates } : c);
+      localStorage.setItem('de_categories', JSON.stringify(next));
+      return next;
+    });
+    showToast('Category updated!', 'success');
   }, [showToast]);
 
   const deleteCategory = useCallback(async (id) => {
     const cat = categories.find(c => c.id === id);
-    if (supabase) {
-      try {
-        const { error } = await supabase.from('de_categories').delete().eq('id', id);
-        if (error) throw error;
-
-        setCategories(prev => {
-          const next = prev.filter(c => c.id !== id);
-          localStorage.setItem('de_categories', JSON.stringify(next));
-          return next;
-        });
-        showToast(`Category "${cat?.name}" removed from Supabase.`, 'danger');
-      } catch (err) {
-        console.error('Error deleting category:', err.message);
-        showToast(`Failed to delete category: ${err.message}`, 'danger');
+    try {
+      await api.deleteCategory(id);
+    } catch (e) {
+      if (supabase) {
+        try {
+          await supabase.from('de_categories').delete().eq('id', id);
+        } catch (sErr) { console.error('Supabase delete error:', sErr); }
       }
-    } else {
-      setCategories(prev => {
-        const next = prev.filter(c => c.id !== id);
-        localStorage.setItem('de_categories', JSON.stringify(next));
-        return next;
-      });
-      showToast(`Category "${cat?.name}" removed.`, 'danger');
     }
+
+    setCategories(prev => {
+      const next = prev.filter(c => c.id !== id);
+      localStorage.setItem('de_categories', JSON.stringify(next));
+      return next;
+    });
+    showToast(`Category "${cat?.name || 'Category'}" removed.`, 'danger');
   }, [categories, showToast]);
 
   const addHeroSlide = useCallback(async (slide) => {
     const sortOrder = heroSlides.length > 0 ? Math.max(...heroSlides.map(s => s.sortOrder ?? 0)) + 1 : 0;
-    if (supabase) {
-      try {
-        const id = `hero-${Date.now()}`;
-        const newSlide = {
-          id,
-          eyebrow: slide.eyebrow || '',
-          heading: slide.heading,
-          subheading: slide.subheading || '',
-          cta: slide.cta || '',
-          cta_secondary: slide.ctaSecondary || '',
-          image: slide.image || null,
-          sort_order: sortOrder,
-          is_active: slide.isActive ?? true,
-        };
+    const id = slide.id || `hero-${Date.now()}`;
+    const newSlide = {
+      ...slide,
+      id,
+      eyebrow: slide.eyebrow || 'DE CREATIVES',
+      heading: slide.heading || 'DEFINE YOUR CREATIVE',
+      subheading: slide.subheading || '',
+      cta: slide.cta || 'Shop The Drop',
+      ctaSecondary: slide.ctaSecondary || '',
+      image: slide.image || '',
+      sortOrder,
+      isActive: slide.isActive ?? true,
+    };
 
-        const { error } = await supabase.from('de_hero_slides').insert([newSlide]);
-        if (error) throw error;
-
-        setHeroSlides(prev => {
-          const next = [...prev, formatDbHeroSlide(newSlide)];
-          localStorage.setItem('de_hero_slides', JSON.stringify(next));
-          return next;
-        });
-        showToast('Hero slide added!', 'success');
-      } catch (err) {
-        console.error('Error adding hero slide:', err.message);
-        showToast(`Failed to add hero slide: ${err.message}`, 'danger');
+    try {
+      await api.createHeroSlide(newSlide);
+    } catch (e) {
+      if (supabase) {
+        try {
+          await supabase.from('de_hero_slides').insert([toDbHeroSlideFields(newSlide)]);
+        } catch (sErr) { console.error('Supabase write error:', sErr); }
       }
-    } else {
-      const newSlide = { ...slide, id: `hero-${Date.now()}`, sortOrder, isActive: slide.isActive ?? true };
-      setHeroSlides(prev => {
-        const next = [...prev, newSlide];
-        localStorage.setItem('de_hero_slides', JSON.stringify(next));
-        return next;
-      });
-      showToast('Hero slide added!', 'success');
     }
+
+    setHeroSlides(prev => {
+      const next = [...prev.filter(s => s.id !== id), newSlide];
+      localStorage.setItem('de_hero_slides', JSON.stringify(next));
+      return next;
+    });
+    showToast('Hero slide added!', 'success');
   }, [heroSlides, showToast]);
 
   const updateHeroSlide = useCallback(async (id, updates) => {
-    if (supabase) {
-      try {
-        const dbUpdates = toDbHeroSlideFields(updates);
-        const { error } = await supabase.from('de_hero_slides').update(dbUpdates).eq('id', id);
-        if (error) throw error;
-
-        setHeroSlides(prev => {
-          const next = prev.map(s => s.id === id ? { ...s, ...updates } : s);
-          localStorage.setItem('de_hero_slides', JSON.stringify(next));
-          return next;
-        });
-        showToast('Hero slide updated!', 'success');
-      } catch (err) {
-        console.error('Error updating hero slide:', err.message);
-        showToast(`Failed to update hero slide: ${err.message}`, 'danger');
+    try {
+      await api.updateHeroSlide({ id, ...updates });
+    } catch (e) {
+      if (supabase) {
+        try {
+          await supabase.from('de_hero_slides').update(toDbHeroSlideFields(updates)).eq('id', id);
+        } catch (sErr) { console.error('Supabase write error:', sErr); }
       }
-    } else {
-      setHeroSlides(prev => {
-        const next = prev.map(s => s.id === id ? { ...s, ...updates } : s);
-        localStorage.setItem('de_hero_slides', JSON.stringify(next));
-        return next;
-      });
-      showToast('Hero slide updated!', 'success');
     }
+
+    setHeroSlides(prev => {
+      const next = prev.map(s => s.id === id ? { ...s, ...updates } : s);
+      localStorage.setItem('de_hero_slides', JSON.stringify(next));
+      return next;
+    });
+    showToast('Hero slide updated!', 'success');
   }, [showToast]);
 
   const deleteHeroSlide = useCallback(async (id) => {
-    if (supabase) {
-      try {
-        const { error } = await supabase.from('de_hero_slides').delete().eq('id', id);
-        if (error) throw error;
-
-        setHeroSlides(prev => {
-          const next = prev.filter(s => s.id !== id);
-          localStorage.setItem('de_hero_slides', JSON.stringify(next));
-          return next;
-        });
-        showToast('Hero slide removed.', 'danger');
-      } catch (err) {
-        console.error('Error deleting hero slide:', err.message);
-        showToast(`Failed to delete hero slide: ${err.message}`, 'danger');
+    try {
+      await api.deleteHeroSlide(id);
+    } catch (e) {
+      if (supabase) {
+        try {
+          await supabase.from('de_hero_slides').delete().eq('id', id);
+        } catch (sErr) { console.error('Supabase delete error:', sErr); }
       }
-    } else {
-      setHeroSlides(prev => {
-        const next = prev.filter(s => s.id !== id);
-        localStorage.setItem('de_hero_slides', JSON.stringify(next));
-        return next;
-      });
-      showToast('Hero slide removed.', 'danger');
     }
+
+    setHeroSlides(prev => {
+      const next = prev.filter(s => s.id !== id);
+      localStorage.setItem('de_hero_slides', JSON.stringify(next));
+      return next;
+    });
+    showToast('Hero slide removed.', 'danger');
   }, [showToast]);
 
   // Swaps sort_order with the adjacent slide (by current array position) to
