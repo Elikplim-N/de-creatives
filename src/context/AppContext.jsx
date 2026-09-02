@@ -109,7 +109,7 @@ export function AppProvider({ children }) {
   });
   const [galleryPhotos, setGalleryPhotos] = useState(() => {
     const saved = localStorage.getItem('de_gallery_photos');
-    return saved ? JSON.parse(saved) : initialGalleryPhotos;
+    return saved !== null ? JSON.parse(saved) : [];
   });
   const [manifesto, setManifesto] = useState(() => {
     const saved = localStorage.getItem('de_manifesto');
@@ -169,6 +169,12 @@ export function AppProvider({ children }) {
           if (maniData && typeof maniData === 'object') {
             setManifesto(maniData);
             localStorage.setItem('de_manifesto', JSON.stringify(maniData));
+          }
+
+          const galData = await api.getGalleryPhotos();
+          if (Array.isArray(galData)) {
+            setGalleryPhotos(galData);
+            localStorage.setItem('de_gallery_photos', JSON.stringify(galData));
           }
           return;
         } catch (apiErr) {
@@ -660,14 +666,21 @@ export function AppProvider({ children }) {
     showToast('Hero slides restored to default.', 'default');
   }, [showToast]);
 
-  const clearAllForOnboarding = useCallback(() => {
+  const clearAllForOnboarding = useCallback(async () => {
+    try {
+      await api.deleteGalleryPhoto('all');
+    } catch (e) {
+      console.warn('API error clearing gallery:', e.message);
+    }
     localStorage.setItem('de_products', JSON.stringify([]));
     localStorage.setItem('de_categories', JSON.stringify([]));
     localStorage.setItem('de_hero_slides', JSON.stringify([]));
+    localStorage.setItem('de_gallery_photos', JSON.stringify([]));
     setProducts([]);
     setCategories([]);
     setHeroSlides([]);
-    showToast('Catalog cleared! Ready for fresh onboarding.', 'success');
+    setGalleryPhotos([]);
+    showToast('Catalog & Lookbook cleared! Ready for fresh onboarding.', 'success');
   }, [showToast]);
 
   // Public - any visitor can submit a review.
@@ -921,16 +934,29 @@ export function AppProvider({ children }) {
   });
 
   // Gallery Management
-  const addGalleryPhoto = useCallback((photo) => {
+  const addGalleryPhoto = useCallback(async (photo) => {
+    const id = photo.id ? String(photo.id) : `photo-${Date.now()}`;
+    const newPhoto = { ...photo, id };
+    try {
+      await api.createGalleryPhoto(newPhoto);
+    } catch (e) {
+      console.warn('API error adding gallery photo:', e.message);
+    }
     setGalleryPhotos(prev => {
-      const newPhotos = [{ ...photo, id: Date.now() }, ...prev];
+      const newPhotos = [newPhoto, ...prev.filter(p => p.id !== id)];
       localStorage.setItem('de_gallery_photos', JSON.stringify(newPhotos));
       return newPhotos;
     });
     showToast('Photo added to The Gallery of DE!', 'success');
   }, [showToast]);
 
-  const updateGalleryPhoto = useCallback((id, updatedFields) => {
+  const updateGalleryPhoto = useCallback(async (id, updatedFields) => {
+    const payload = { id, ...updatedFields };
+    try {
+      await api.updateGalleryPhoto(payload);
+    } catch (e) {
+      console.warn('API error updating gallery photo:', e.message);
+    }
     setGalleryPhotos(prev => {
       const newPhotos = prev.map(p => p.id === id ? { ...p, ...updatedFields } : p);
       localStorage.setItem('de_gallery_photos', JSON.stringify(newPhotos));
@@ -939,7 +965,12 @@ export function AppProvider({ children }) {
     showToast('Gallery photo updated!', 'success');
   }, [showToast]);
 
-  const deleteGalleryPhoto = useCallback((id) => {
+  const deleteGalleryPhoto = useCallback(async (id) => {
+    try {
+      await api.deleteGalleryPhoto(id);
+    } catch (e) {
+      console.warn('API error deleting gallery photo:', e.message);
+    }
     setGalleryPhotos(prev => {
       const newPhotos = prev.filter(p => p.id !== id);
       localStorage.setItem('de_gallery_photos', JSON.stringify(newPhotos));

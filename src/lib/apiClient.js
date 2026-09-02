@@ -167,5 +167,37 @@ export const api = {
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
+  },
+
+  // Gallery
+  async getGalleryPhotos() {
+    const res = await fetch(`${API_BASE}/gallery`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
+  async createGalleryPhoto(photo) {
+    const res = await fetch(`${API_BASE}/gallery`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(photo)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
+  async updateGalleryPhoto(photo) {
+    const res = await fetch(`${API_BASE}/gallery`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(photo)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
+  async deleteGalleryPhoto(id) {
+    const res = await fetch(`${API_BASE}/gallery?id=${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
   }
 };

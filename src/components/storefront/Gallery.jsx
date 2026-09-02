@@ -8,7 +8,7 @@ export default function Gallery() {
   const { galleryPhotos } = useApp();
   const [activePhoto, setActivePhoto] = useState(null);
 
-  const displayPhotos = galleryPhotos && galleryPhotos.length > 0 ? galleryPhotos : initialGalleryPhotos;
+  const displayPhotos = Array.isArray(galleryPhotos) ? galleryPhotos : [];
 
   const handlePrev = useCallback((e) => {
     e?.stopPropagation();
@@ -61,40 +61,48 @@ export default function Gallery() {
           </p>
         </div>
 
-        <div className="gallery-grid">
-          {displayPhotos.map((photo, i) => (
-            <div
-              key={photo.id}
-              className={`gallery-item gallery-item--${(i % 5 === 0) ? 'wide' : (i % 3 === 0) ? 'tall' : 'normal'}`}
-              onClick={() => setActivePhoto(photo)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setActivePhoto(photo); }}
-              aria-label={`View photo ${photo.title}`}
-            >
-              <img
-                src={photo.src}
-                alt={photo.title}
-                className="gallery-item__img"
-                loading="lazy"
-              />
-              <div className="gallery-item__overlay">
-                <span className="gallery-item__tag">{photo.tag}</span>
-                <h3 className="gallery-item__title">{photo.title}</h3>
-                <p className="gallery-item__category">{photo.category}</p>
-                <span className="gallery-item__zoom-hint">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    <line x1="11" y1="8" x2="11" y2="14"/>
-                    <line x1="8" y1="11" x2="14" y2="11"/>
-                  </svg>
-                  Enlarge Photo
-                </span>
+        {displayPhotos.length === 0 ? (
+          <div className="gallery-empty" style={{ textAlign: 'center', padding: 'var(--space-12) 0', color: 'var(--text-muted)' }}>
+            <p style={{ fontFamily: 'var(--font-accent)', letterSpacing: '0.05em' }}>
+              Visual Lookbook updates dropping soon. Stay tuned.
+            </p>
+          </div>
+        ) : (
+          <div className="gallery-grid">
+            {displayPhotos.map((photo, i) => (
+              <div
+                key={photo.id}
+                className={`gallery-item gallery-item--${(i % 5 === 0) ? 'wide' : (i % 3 === 0) ? 'tall' : 'normal'}`}
+                onClick={() => setActivePhoto(photo)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setActivePhoto(photo); }}
+                aria-label={`View photo ${photo.title}`}
+              >
+                <img
+                  src={photo.src}
+                  alt={photo.title}
+                  className="gallery-item__img"
+                  loading="lazy"
+                />
+                <div className="gallery-item__overlay">
+                  <span className="gallery-item__tag">{photo.tag}</span>
+                  <h3 className="gallery-item__title">{photo.title}</h3>
+                  <p className="gallery-item__category">{photo.category}</p>
+                  <span className="gallery-item__zoom-hint">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="11" cy="11" r="8"/>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                      <line x1="11" y1="8" x2="11" y2="14"/>
+                      <line x1="8" y1="11" x2="14" y2="11"/>
+                    </svg>
+                    Enlarge Photo
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Fullscreen Lightbox Modal */}
