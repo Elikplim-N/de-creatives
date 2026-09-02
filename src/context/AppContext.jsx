@@ -80,55 +80,57 @@ function toDbHeroSlideFields(updates) {
   return dbFields;
 }
 
-function safeStorageSet(key, value) {
-  try {
-    localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
-  } catch (e) {
-    console.warn(`Storage quota exceeded or restricted for ${key}:`, e.message);
-  }
-}
-
 export function AppProvider({ children }) {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
     return localStorage.getItem('de_admin_session') === 'true';
   });
   const [authLoading, setAuthLoading] = useState(!!supabase);
   const [loginError, setLoginError] = useState('');
-  const [products, setProducts] = useState(() => {
-    const saved = localStorage.getItem('de_products');
-    return saved !== null ? JSON.parse(saved) : [];
-  });
-  const [categories, setCategories] = useState(() => {
-    const saved = localStorage.getItem('de_categories');
-    return saved !== null ? JSON.parse(saved) : [];
-  });
+
+  // Catalog state - populated strictly from the cloud database (Supabase)
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [orders, setOrders] = useState([]);
-  const [testimonials, setTestimonials] = useState(() => {
-    const saved = localStorage.getItem('de_testimonials');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [subscribers, setSubscribers] = useState(() => {
-    const saved = localStorage.getItem('de_subscribers');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [heroSlides, setHeroSlides] = useState(() => {
-    const saved = localStorage.getItem('de_hero_slides');
-    return saved !== null ? JSON.parse(saved) : [];
-  });
-  const [galleryPhotos, setGalleryPhotos] = useState(() => {
-    const saved = localStorage.getItem('de_gallery_photos');
-    return saved !== null ? JSON.parse(saved) : [];
-  });
-  const [manifesto, setManifesto] = useState(() => {
-    const saved = localStorage.getItem('de_manifesto');
-    return saved ? JSON.parse(saved) : initialManifesto;
-  });
+  const [testimonials, setTestimonials] = useState([]);
+  const [subscribers, setSubscribers] = useState([]);
+  const [heroSlides, setHeroSlides] = useState([]);
+  const [galleryPhotos, setGalleryPhotos] = useState([]);
+  const [manifesto, setManifesto] = useState(initialManifesto);
   const [pendingTestimonials, setPendingTestimonials] = useState([]);
-  const [cart, setCart] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
+
+  // Client-only state (persists in browser for shopper convenience)
+  const [cart, setCart] = useState(() => {
+    try {
+      const saved = localStorage.getItem('de_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [wishlist, setWishlist] = useState(() => {
+    try {
+      const saved = localStorage.getItem('de_wishlist');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+
   const [toast, setToast] = useState(null);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // One-time cleanup: remove any old prototype catalog keys from browser storage
+  useEffect(() => {
+    ['de_products', 'de_categories', 'de_hero_slides', 'de_testimonials', 'de_pending_testimonials', 'de_subscribers', 'de_gallery_photos', 'de_manifesto'].forEach(k => {
+      try { localStorage.removeItem(k); } catch {}
+    });
+  }, []);
+
+  // Save cart & wishlist changes to browser
+  useEffect(() => {
+    try { localStorage.setItem('de_cart', JSON.stringify(cart)); } catch {}
+  }, [cart]);
+
+  useEffect(() => {
+    try { localStorage.setItem('de_wishlist', JSON.stringify(wishlist)); } catch {}
+  }, [wishlist]);
 
   const showToast = useCallback((message, type = 'default', icon = null) => {
     setToast({ message, type, icon });
@@ -146,7 +148,6 @@ export function AppProvider({ children }) {
         if (Array.isArray(catData)) {
           catList = catData;
           setCategories(catData);
-          safeStorageSet('de_categories', catData);
         }
       } catch (e) {
         console.warn('Failed to load categories from API:', e.message);
@@ -158,7 +159,6 @@ export function AppProvider({ children }) {
         if (Array.isArray(prodData)) {
           const formatted = prodData.map(p => formatDbProduct(p, catList));
           setProducts(formatted);
-          safeStorageSet('de_products', formatted);
         }
       } catch (e) {
         console.warn('Failed to load products from API:', e.message);
@@ -170,7 +170,6 @@ export function AppProvider({ children }) {
         if (Array.isArray(heroData)) {
           const formatted = heroData.map(formatDbHeroSlide);
           setHeroSlides(formatted);
-          safeStorageSet('de_hero_slides', formatted);
         }
       } catch (e) {
         console.warn('Failed to load hero slides from API:', e.message);
@@ -202,7 +201,6 @@ export function AppProvider({ children }) {
         const maniData = await api.getManifesto();
         if (maniData && typeof maniData === 'object') {
           setManifesto(maniData);
-          safeStorageSet('de_manifesto', maniData);
         }
       } catch (e) {
         console.warn('Failed to load manifesto from API:', e.message);
@@ -213,7 +211,6 @@ export function AppProvider({ children }) {
         const galData = await api.getGalleryPhotos();
         if (Array.isArray(galData)) {
           setGalleryPhotos(galData);
-          safeStorageSet('de_gallery_photos', galData);
         }
       } catch (e) {
         console.warn('Failed to load gallery photos from API:', e.message);
@@ -425,11 +422,7 @@ export function AppProvider({ children }) {
     }
 
     const formatted = formatDbProduct(newProduct, categories);
-    setProducts(prev => {
-      const next = [formatted, ...prev.filter(p => p.id !== id)];
-      localStorage.setItem('de_products', JSON.stringify(next));
-      return next;
-    });
+    setProducts(prev => [formatted, ...prev.filter(p => p.id !== id)]);
     showToast(`"${product.name}" added successfully!`, 'success');
   }, [categories, showToast]);
 
@@ -444,20 +437,16 @@ export function AppProvider({ children }) {
       }
     }
 
-    setProducts(prev => {
-      const next = prev.map(p => {
-        if (p.id === id) {
-          const merged = { ...p, ...updates };
-          if ('category' in updates) {
-            merged.categoryName = categories.find(c => c.id === updates.category)?.name || 'Uncategorized';
-          }
-          return merged;
+    setProducts(prev => prev.map(p => {
+      if (p.id === id) {
+        const merged = { ...p, ...updates };
+        if ('category' in updates) {
+          merged.categoryName = categories.find(c => c.id === updates.category)?.name || 'Uncategorized';
         }
-        return p;
-      });
-      localStorage.setItem('de_products', JSON.stringify(next));
-      return next;
-    });
+        return merged;
+      }
+      return p;
+    }));
     showToast('Product updated successfully!', 'success');
   }, [categories, showToast]);
 
@@ -473,11 +462,7 @@ export function AppProvider({ children }) {
       }
     }
 
-    setProducts(prev => {
-      const next = prev.filter(p => p.id !== id);
-      localStorage.setItem('de_products', JSON.stringify(next));
-      return next;
-    });
+    setProducts(prev => prev.filter(p => p.id !== id));
     showToast(`"${product?.name || 'Product'}" removed.`, 'danger');
   }, [products, showToast]);
 
@@ -501,11 +486,7 @@ export function AppProvider({ children }) {
       }
     }
 
-    setCategories(prev => {
-      const next = [...prev.filter(c => c.id !== id), newCat];
-      localStorage.setItem('de_categories', JSON.stringify(next));
-      return next;
-    });
+    setCategories(prev => [...prev.filter(c => c.id !== id), newCat]);
     showToast(`Category "${category.name}" added!`, 'success');
   }, [showToast]);
 
@@ -520,11 +501,7 @@ export function AppProvider({ children }) {
       }
     }
 
-    setCategories(prev => {
-      const next = prev.map(c => c.id === id ? { ...c, ...updates } : c);
-      localStorage.setItem('de_categories', JSON.stringify(next));
-      return next;
-    });
+    setCategories(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
     showToast('Category updated!', 'success');
   }, [showToast]);
 
@@ -540,11 +517,7 @@ export function AppProvider({ children }) {
       }
     }
 
-    setCategories(prev => {
-      const next = prev.filter(c => c.id !== id);
-      localStorage.setItem('de_categories', JSON.stringify(next));
-      return next;
-    });
+    setCategories(prev => prev.filter(c => c.id !== id));
     showToast(`Category "${cat?.name || 'Category'}" removed.`, 'danger');
   }, [categories, showToast]);
 
@@ -574,11 +547,7 @@ export function AppProvider({ children }) {
       }
     }
 
-    setHeroSlides(prev => {
-      const next = [...prev.filter(s => s.id !== id), newSlide];
-      localStorage.setItem('de_hero_slides', JSON.stringify(next));
-      return next;
-    });
+    setHeroSlides(prev => [...prev.filter(s => s.id !== id), newSlide]);
     showToast('Hero slide added!', 'success');
   }, [heroSlides, showToast]);
 
@@ -593,11 +562,7 @@ export function AppProvider({ children }) {
       }
     }
 
-    setHeroSlides(prev => {
-      const next = prev.map(s => s.id === id ? { ...s, ...updates } : s);
-      localStorage.setItem('de_hero_slides', JSON.stringify(next));
-      return next;
-    });
+    setHeroSlides(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
     showToast('Hero slide updated!', 'success');
   }, [showToast]);
 
@@ -612,11 +577,7 @@ export function AppProvider({ children }) {
       }
     }
 
-    setHeroSlides(prev => {
-      const next = prev.filter(s => s.id !== id);
-      localStorage.setItem('de_hero_slides', JSON.stringify(next));
-      return next;
-    });
+    setHeroSlides(prev => prev.filter(s => s.id !== id));
     showToast('Hero slide removed.', 'danger');
   }, [showToast]);
 
@@ -640,46 +601,37 @@ export function AppProvider({ children }) {
         const { error: err2 } = await supabase.from('de_hero_slides').update({ sort_order: currentOrder }).eq('id', target.id);
         if (err2) throw err2;
 
-        setHeroSlides(prev => {
-          const next = prev.map(s => {
-            if (s.id === current.id) return { ...s, sortOrder: targetOrder };
-            if (s.id === target.id) return { ...s, sortOrder: currentOrder };
-            return s;
-          });
-          localStorage.setItem('de_hero_slides', JSON.stringify(next));
-          return next;
-        });
+        setHeroSlides(prev => prev.map(s => {
+          if (s.id === current.id) return { ...s, sortOrder: targetOrder };
+          if (s.id === target.id) return { ...s, sortOrder: currentOrder };
+          return s;
+        }));
       } catch (err) {
         console.error('Error reordering hero slides:', err.message);
         showToast(`Failed to reorder: ${err.message}`, 'danger');
       }
     } else {
       setHeroSlides(prev => {
-        const next = prev.map(s => {
+        return prev.map(s => {
           if (s.id === current.id) return { ...s, sortOrder: targetOrder };
           if (s.id === target.id) return { ...s, sortOrder: currentOrder };
           return s;
         });
-        localStorage.setItem('de_hero_slides', JSON.stringify(next));
-        return next;
       });
     }
   }, [heroSlides, showToast]);
 
   const resetProductsToDefault = useCallback(() => {
-    localStorage.removeItem('de_products');
     setProducts(initialProducts);
     showToast('Products restored to default.', 'default');
   }, [showToast]);
 
   const resetCategoriesToDefault = useCallback(() => {
-    localStorage.removeItem('de_categories');
     setCategories(initialCategories);
     showToast('Categories restored to default.', 'default');
   }, [showToast]);
 
   const resetHeroSlidesToDefault = useCallback(() => {
-    localStorage.removeItem('de_hero_slides');
     setHeroSlides(initialHeroSlides);
     showToast('Hero slides restored to default.', 'default');
   }, [showToast]);
@@ -690,10 +642,6 @@ export function AppProvider({ children }) {
     } catch (e) {
       console.warn('API error clearing gallery:', e.message);
     }
-    localStorage.setItem('de_products', JSON.stringify([]));
-    localStorage.setItem('de_categories', JSON.stringify([]));
-    localStorage.setItem('de_hero_slides', JSON.stringify([]));
-    localStorage.setItem('de_gallery_photos', JSON.stringify([]));
     setProducts([]);
     setCategories([]);
     setHeroSlides([]);
@@ -733,11 +681,7 @@ export function AppProvider({ children }) {
       }
     }
 
-    setPendingTestimonials(prev => {
-      const updated = [newTestimonial, ...prev];
-      localStorage.setItem('de_pending_testimonials', JSON.stringify(updated));
-      return updated;
-    });
+    setPendingTestimonials(prev => [newTestimonial, ...prev]);
 
     showToast('Thanks for sharing! Your review will appear once approved.', 'success');
     return true;
@@ -760,13 +704,8 @@ export function AppProvider({ children }) {
     setPendingTestimonials(prev => {
       const target = prev.find(t => String(t.id) === idStr);
       const remaining = prev.filter(t => String(t.id) !== idStr);
-      localStorage.setItem('de_pending_testimonials', JSON.stringify(remaining));
       if (target) {
-        setTestimonials(tList => {
-          const updated = [{ ...target, is_approved: true }, ...tList];
-          localStorage.setItem('de_testimonials', JSON.stringify(updated));
-          return updated;
-        });
+        setTestimonials(tList => [{ ...target, is_approved: true }, ...tList]);
       }
       return remaining;
     });
@@ -788,17 +727,8 @@ export function AppProvider({ children }) {
       }
     }
 
-    setPendingTestimonials(prev => {
-      const updated = prev.filter(t => String(t.id) !== idStr);
-      localStorage.setItem('de_pending_testimonials', JSON.stringify(updated));
-      return updated;
-    });
-
-    setTestimonials(prev => {
-      const updated = prev.filter(t => String(t.id) !== idStr);
-      localStorage.setItem('de_testimonials', JSON.stringify(updated));
-      return updated;
-    });
+    setPendingTestimonials(prev => prev.filter(t => String(t.id) !== idStr));
+    setTestimonials(prev => prev.filter(t => String(t.id) !== idStr));
 
     showToast('Review removed.', 'default');
   }, [showToast]);
@@ -806,8 +736,6 @@ export function AppProvider({ children }) {
   const resetTestimonials = useCallback(() => {
     setTestimonials(initialTestimonials);
     setPendingTestimonials([]);
-    localStorage.removeItem('de_testimonials');
-    localStorage.removeItem('de_pending_testimonials');
     showToast('Reviews reset to default.', 'default');
   }, [showToast]);
 
@@ -838,20 +766,15 @@ export function AppProvider({ children }) {
 
       setSubscribers(prev => {
         const exists = prev.some(s => s.email === newSub.email);
-        const updated = exists ? prev : [newSub, ...prev];
-        localStorage.setItem('de_subscribers', JSON.stringify(updated));
-        return updated;
+        return exists ? prev : [newSub, ...prev];
       });
 
       return true;
     } catch (err) {
       console.error('Subscribe error:', err);
-      // Still store locally
       setSubscribers(prev => {
         const exists = prev.some(s => s.email === newSub.email);
-        const updated = exists ? prev : [newSub, ...prev];
-        localStorage.setItem('de_subscribers', JSON.stringify(updated));
-        return updated;
+        return exists ? prev : [newSub, ...prev];
       });
       return true;
     }
@@ -862,11 +785,7 @@ export function AppProvider({ children }) {
       if (supabase && email) {
         await supabase.from('de_subscribers').delete().eq('email', email);
       }
-      setSubscribers(prev => {
-        const updated = prev.filter(s => s.id !== id && s.email !== email);
-        localStorage.setItem('de_subscribers', JSON.stringify(updated));
-        return updated;
-      });
+      setSubscribers(prev => prev.filter(s => s.id !== id && s.email !== email));
       showToast('Subscriber removed.', 'default');
     } catch (err) {
       console.error('Delete subscriber error:', err.message);
@@ -960,11 +879,7 @@ export function AppProvider({ children }) {
     } catch (e) {
       console.warn('API error adding gallery photo:', e.message);
     }
-    setGalleryPhotos(prev => {
-      const newPhotos = [newPhoto, ...prev.filter(p => p.id !== id)];
-      localStorage.setItem('de_gallery_photos', JSON.stringify(newPhotos));
-      return newPhotos;
-    });
+    setGalleryPhotos(prev => [newPhoto, ...prev.filter(p => p.id !== id)]);
     showToast('Photo added to The Gallery of DE!', 'success');
   }, [showToast]);
 
@@ -975,11 +890,7 @@ export function AppProvider({ children }) {
     } catch (e) {
       console.warn('API error updating gallery photo:', e.message);
     }
-    setGalleryPhotos(prev => {
-      const newPhotos = prev.map(p => p.id === id ? { ...p, ...updatedFields } : p);
-      localStorage.setItem('de_gallery_photos', JSON.stringify(newPhotos));
-      return newPhotos;
-    });
+    setGalleryPhotos(prev => prev.map(p => p.id === id ? { ...p, ...updatedFields } : p));
     showToast('Gallery photo updated!', 'success');
   }, [showToast]);
 
@@ -989,30 +900,28 @@ export function AppProvider({ children }) {
     } catch (e) {
       console.warn('API error deleting gallery photo:', e.message);
     }
-    setGalleryPhotos(prev => {
-      const newPhotos = prev.filter(p => p.id !== id);
-      localStorage.setItem('de_gallery_photos', JSON.stringify(newPhotos));
-      return newPhotos;
-    });
+    setGalleryPhotos(prev => prev.filter(p => p.id !== id));
     showToast('Gallery photo removed.', 'default');
   }, [showToast]);
 
   const resetGalleryPhotos = useCallback(() => {
     setGalleryPhotos(initialGalleryPhotos);
-    localStorage.removeItem('de_gallery_photos');
     showToast('Gallery reset to default.', 'default');
   }, [showToast]);
 
   // Manifesto / Clan of DE Management
-  const updateManifesto = useCallback((newManifestoData) => {
+  const updateManifesto = useCallback(async (newManifestoData) => {
     setManifesto(newManifestoData);
-    localStorage.setItem('de_manifesto', JSON.stringify(newManifestoData));
+    try {
+      await api.saveManifesto(newManifestoData);
+    } catch (e) {
+      console.warn('API error saving manifesto:', e.message);
+    }
     showToast('Clan of DE content updated successfully!', 'success');
   }, [showToast]);
 
   const resetManifesto = useCallback(() => {
     setManifesto(initialManifesto);
-    localStorage.removeItem('de_manifesto');
     showToast('Clan of DE reset to default.', 'default');
   }, [showToast]);
 
