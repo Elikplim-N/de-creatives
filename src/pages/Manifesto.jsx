@@ -14,11 +14,31 @@ export default function Manifesto() {
       <main id="main-content" style={{ minHeight: '100vh', paddingTop: 'var(--nav-height)' }}>
         {/* Hero Section */}
         <section className="manifesto-hero">
-          <img
-            src="/products/tee-black-girl-palm.jpg"
-            alt="Clan of DE Editorial"
-            className="manifesto-hero__img"
-          />
+          {manifesto?.heroImage ? (
+            <img
+              src={manifesto.heroImage}
+              alt="Clan of DE Editorial"
+              className="manifesto-hero__img"
+            />
+          ) : (
+            <div className="manifesto-hero__img manifesto-hero__img--fallback" style={{
+              background: 'linear-gradient(135deg, #09090b 0%, #13141c 50%, #09090b 100%)',
+              position: 'absolute',
+              inset: 0
+            }}>
+              <div style={{
+                position: 'absolute',
+                top: '20%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '400px',
+                height: '300px',
+                background: 'radial-gradient(circle, rgba(0,200,200,0.14) 0%, rgba(0,0,0,0) 70%)',
+                filter: 'blur(50px)',
+                pointerEvents: 'none'
+              }} />
+            </div>
+          )}
           <div className="manifesto-hero__overlay" />
           <div className="manifesto-hero__content container">
             <p className="manifesto-hero__brand animate-fade-up">{manifesto?.heroBrand || 'Clan of DE'}</p>

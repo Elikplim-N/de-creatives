@@ -4,10 +4,11 @@ import './AdminOverview.css';
 import './AdminInventory.css';
 
 export default function AdminManifesto() {
-  const { manifesto, updateManifesto, resetManifesto } = useApp();
+  const { manifesto, updateManifesto, resetManifesto, uploadProductImages } = useApp();
   const [form, setForm] = useState(manifesto || {});
   const [activeTab, setActiveTab] = useState('editor'); // 'editor' or 'preview'
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     if (manifesto) {
@@ -17,6 +18,20 @@ export default function AdminManifesto() {
 
   const handleFieldChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleImageFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const [uploadedUrl] = await uploadProductImages([file]);
+      if (uploadedUrl) {
+        setForm(prev => ({ ...prev, heroImage: uploadedUrl }));
+      }
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handlePillarChange = (index, field, value) => {
@@ -95,9 +110,46 @@ export default function AdminManifesto() {
           {/* Section 1: Hero & Greeting */}
           <div className="admin-card">
             <h2 className="admin-card__title" style={{ fontSize: '1.05rem', color: 'var(--turquoise)', marginBottom: '16px' }}>
-              1. Hero Header & Introduction
+              1. Hero Header & Background Image
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+              <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <label className="form-label">Hero Cover Image (Optional)</label>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageFileChange}
+                    style={{ fontSize: '0.85rem' }}
+                    disabled={uploadingImage}
+                  />
+                  <input
+                    type="text"
+                    className="form-input"
+                    style={{ flex: 1, minWidth: '240px' }}
+                    placeholder="Or paste direct image URL (https://... or /products/...)"
+                    value={form.heroImage || ''}
+                    onChange={e => handleFieldChange('heroImage', e.target.value)}
+                  />
+                  {form.heroImage && (
+                    <button
+                      type="button"
+                      className="btn btn-outline btn-sm"
+                      style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                      onClick={() => handleFieldChange('heroImage', '')}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                {form.heroImage && (
+                  <div style={{ marginTop: '10px' }}>
+                    <img src={form.heroImage} alt="Manifesto Preview" style={{ height: '80px', borderRadius: '6px', objectFit: 'cover' }} />
+                  </div>
+                )}
+                {uploadingImage && <p style={{ fontSize: '0.8rem', color: 'var(--turquoise)', marginTop: '4px' }}>Uploading photo...</p>}
+              </div>
+
               <div className="form-group">
                 <label className="form-label" htmlFor="heroTitle">Page Title</label>
                 <input
