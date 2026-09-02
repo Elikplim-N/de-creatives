@@ -80,6 +80,14 @@ function toDbHeroSlideFields(updates) {
   return dbFields;
 }
 
+function safeStorageSet(key, value) {
+  try {
+    localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+  } catch (e) {
+    console.warn(`Storage quota exceeded or restricted for ${key}:`, e.message);
+  }
+}
+
 export function AppProvider({ children }) {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
     return localStorage.getItem('de_admin_session') === 'true';
@@ -130,75 +138,85 @@ export function AppProvider({ children }) {
   // Fetch initial data from Backend API or Supabase
   useEffect(() => {
     const loadData = async () => {
+      let catList = [];
+
+      // 1. Categories
       try {
-        let catList = [];
-        try {
-          const catData = await api.getCategories();
-          if (Array.isArray(catData)) {
-            catList = catData;
-            setCategories(catData);
-            localStorage.setItem('de_categories', JSON.stringify(catData));
-          }
-
-          const prodData = await api.getProducts();
-          if (Array.isArray(prodData)) {
-            const formatted = prodData.map(p => formatDbProduct(p, catList));
-            setProducts(formatted);
-            localStorage.setItem('de_products', JSON.stringify(formatted));
-          }
-
-          const heroData = await api.getHeroSlides();
-          if (Array.isArray(heroData)) {
-            const formatted = heroData.map(formatDbHeroSlide);
-            setHeroSlides(formatted);
-            localStorage.setItem('de_hero_slides', JSON.stringify(formatted));
-          }
-
-          const testData = await api.getTestimonials(true);
-          if (Array.isArray(testData) && testData.length > 0) {
-            setTestimonials(testData.filter(t => t.is_approved));
-            setPendingTestimonials(testData.filter(t => !t.is_approved));
-          }
-
-          const subData = await api.getSubscribers();
-          if (Array.isArray(subData) && subData.length > 0) {
-            setSubscribers(subData);
-          }
-
-          const maniData = await api.getManifesto();
-          if (maniData && typeof maniData === 'object') {
-            setManifesto(maniData);
-            localStorage.setItem('de_manifesto', JSON.stringify(maniData));
-          }
-
-          const galData = await api.getGalleryPhotos();
-          if (Array.isArray(galData)) {
-            setGalleryPhotos(galData);
-            localStorage.setItem('de_gallery_photos', JSON.stringify(galData));
-          }
-          return;
-        } catch (apiErr) {
-          console.warn('Backend API fetch fallback:', apiErr.message);
+        const catData = await api.getCategories();
+        if (Array.isArray(catData)) {
+          catList = catData;
+          setCategories(catData);
+          safeStorageSet('de_categories', catData);
         }
+      } catch (e) {
+        console.warn('Failed to load categories from API:', e.message);
+      }
 
-        if (supabase) {
-          const { data: cData } = await supabase.from('de_categories').select('*');
-          if (cData) { setCategories(cData); localStorage.setItem('de_categories', JSON.stringify(cData)); }
-          const { data: pData } = await supabase.from('de_products').select('*');
-          if (pData) {
-            const formatted = pData.map(p => formatDbProduct(p, cData));
-            setProducts(formatted);
-            localStorage.setItem('de_products', JSON.stringify(formatted));
-          }
-          const { data: hData } = await supabase.from('de_hero_slides').select('*').order('sort_order', { ascending: true });
-          if (hData) {
-            const formatted = hData.map(formatDbHeroSlide);
-            setHeroSlides(formatted);
-            localStorage.setItem('de_hero_slides', JSON.stringify(formatted));
-          }
+      // 2. Products
+      try {
+        const prodData = await api.getProducts();
+        if (Array.isArray(prodData)) {
+          const formatted = prodData.map(p => formatDbProduct(p, catList));
+          setProducts(formatted);
+          safeStorageSet('de_products', formatted);
         }
-      } catch (err) {
-        console.error('Error loading data:', err.message);
+      } catch (e) {
+        console.warn('Failed to load products from API:', e.message);
+      }
+
+      // 3. Hero Slides
+      try {
+        const heroData = await api.getHeroSlides();
+        if (Array.isArray(heroData)) {
+          const formatted = heroData.map(formatDbHeroSlide);
+          setHeroSlides(formatted);
+          safeStorageSet('de_hero_slides', formatted);
+        }
+      } catch (e) {
+        console.warn('Failed to load hero slides from API:', e.message);
+      }
+
+      // 4. Testimonials
+      try {
+        const testData = await api.getTestimonials(true);
+        if (Array.isArray(testData)) {
+          setTestimonials(testData.filter(t => t.is_approved));
+          setPendingTestimonials(testData.filter(t => !t.is_approved));
+        }
+      } catch (e) {
+        console.warn('Failed to load testimonials from API:', e.message);
+      }
+
+      // 5. Subscribers
+      try {
+        const subData = await api.getSubscribers();
+        if (Array.isArray(subData)) {
+          setSubscribers(subData);
+        }
+      } catch (e) {
+        console.warn('Failed to load subscribers from API:', e.message);
+      }
+
+      // 6. Manifesto
+      try {
+        const maniData = await api.getManifesto();
+        if (maniData && typeof maniData === 'object') {
+          setManifesto(maniData);
+          safeStorageSet('de_manifesto', maniData);
+        }
+      } catch (e) {
+        console.warn('Failed to load manifesto from API:', e.message);
+      }
+
+      // 7. Gallery Photos
+      try {
+        const galData = await api.getGalleryPhotos();
+        if (Array.isArray(galData)) {
+          setGalleryPhotos(galData);
+          safeStorageSet('de_gallery_photos', galData);
+        }
+      } catch (e) {
+        console.warn('Failed to load gallery photos from API:', e.message);
       }
     };
 
