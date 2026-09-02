@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
+import { initialGalleryPhotos } from '../../data/mockData';
 import './Gallery.css';
 
 export default function Gallery() {
   const { galleryPhotos } = useApp();
   const [activePhoto, setActivePhoto] = useState(null);
 
-  const displayPhotos = galleryPhotos && galleryPhotos.length > 0 ? galleryPhotos : [];
+  const displayPhotos = galleryPhotos && galleryPhotos.length > 0 ? galleryPhotos : initialGalleryPhotos;
 
   const handlePrev = useCallback((e) => {
     e?.stopPropagation();

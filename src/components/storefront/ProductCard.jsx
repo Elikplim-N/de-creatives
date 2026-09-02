@@ -6,9 +6,13 @@ import './ProductCard.css';
 export default function ProductCard({ product }) {
   const { toggleWishlist, isInWishlist, addToCart, formatPrice } = useApp();
   const wishlisted = isInWishlist(product.id);
-  const discount = product.comparePrice
-    ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
+  const priceNum = Number(product.price) || 0;
+  const compareNum = product.comparePrice ? Number(product.comparePrice) : null;
+  const discount = compareNum && compareNum > priceNum
+    ? Math.round(((compareNum - priceNum) / compareNum) * 100)
     : null;
+  const ratingNum = typeof product.rating === 'number' ? product.rating : (Number(product.rating) || 5.0);
+  const starCount = Math.max(0, Math.min(5, Math.round(ratingNum)));
 
   // Defensive fallbacks for Supabase PostgreSQL array columns
   const images = product.images || [];
@@ -90,8 +94,8 @@ export default function ProductCard({ product }) {
         <div className="product-card__meta">
           <span className="product-card__category">{product.categoryName}</span>
           <div className="product-card__rating">
-            <span className="product-card__stars">{'★'.repeat(Math.round(product.rating || 5))}</span>
-            <span className="product-card__review-count">({product.reviewCount || 0})</span>
+            <span className="product-card__stars">{'★'.repeat(starCount)}</span>
+            <span className="product-card__review-count">({Number(product.reviewCount) || 0})</span>
           </div>
         </div>
 

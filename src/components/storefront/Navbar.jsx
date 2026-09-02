@@ -34,6 +34,19 @@ export default function Navbar() {
     { label: 'Clan of DE', href: '/manifesto' },
   ];
 
+  const handleLinkClick = (e, href) => {
+    setMobileOpen(false);
+    if (href.includes('#gallery')) {
+      if (location.pathname === '/') {
+        e.preventDefault();
+        const el = document.getElementById('gallery');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }
+  };
+
   return (
     <header className={`navbar${scrolled ? ' navbar--scrolled' : ''}${mobileOpen ? ' navbar--open' : ''}`} role="banner">
       <div className="navbar__inner">
@@ -51,7 +64,12 @@ export default function Navbar() {
 
           <nav className="navbar__links" aria-label="Main navigation">
             {navLinks.map(l => (
-              <Link key={l.label} to={l.href} className="navbar__link">
+              <Link
+                key={l.label}
+                to={l.href}
+                className="navbar__link"
+                onClick={(e) => handleLinkClick(e, l.href)}
+              >
                 {l.label}
               </Link>
             ))}
@@ -103,7 +121,12 @@ export default function Navbar() {
       <div className={`navbar__mobile${mobileOpen ? ' navbar__mobile--open' : ''}`} aria-hidden={!mobileOpen}>
         <nav className="navbar__mobile-links">
           {navLinks.map(l => (
-            <Link key={l.label} to={l.href} className="navbar__mobile-link">
+            <Link
+              key={l.label}
+              to={l.href}
+              className="navbar__mobile-link"
+              onClick={(e) => handleLinkClick(e, l.href)}
+            >
               {l.label}
             </Link>
           ))}

@@ -67,11 +67,17 @@ export default function ProductDetail() {
     );
   }
 
-  const currentUnitPrice = isDropShoulder ? 250.00 : product.price;
+  const priceNum = Number(product.price) || 0;
+  const currentUnitPrice = isDropShoulder ? 250.00 : priceNum;
   const wishlisted = isInWishlist(product.id);
-  const discount = product.comparePrice
-    ? Math.round(((product.comparePrice - currentUnitPrice) / product.comparePrice) * 100)
+  const compareNum = product.comparePrice ? Number(product.comparePrice) : null;
+  const discount = compareNum && compareNum > currentUnitPrice
+    ? Math.round(((compareNum - currentUnitPrice) / compareNum) * 100)
     : null;
+
+  const ratingNum = typeof product.rating === 'number' ? product.rating : (Number(product.rating) || 5.0);
+  const safeStarCount = Math.max(0, Math.min(5, Math.round(ratingNum)));
+  const reviewCountNum = Number(product.reviewCount) || 0;
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -163,16 +169,16 @@ export default function ProductDetail() {
               <h1 className="product-detail__name">{product.name}</h1>
 
               <div className="product-detail__rating">
-                <span className="product-detail__stars">{'★'.repeat(Math.round(product.rating || 5))}</span>
-                <span className="product-detail__rating-val">{(product.rating || 5.0).toFixed(1)}</span>
-                <span className="product-detail__review-count">({product.reviewCount || 0} reviews)</span>
+                <span className="product-detail__stars">{'★'.repeat(safeStarCount)}</span>
+                <span className="product-detail__rating-val">{ratingNum.toFixed(1)}</span>
+                <span className="product-detail__review-count">({reviewCountNum} reviews)</span>
               </div>
 
               <div className="product-detail__price-row">
                 <span className="product-detail__price">{formatPrice(currentUnitPrice)}</span>
-                {product.comparePrice && !isDropShoulder && (
+                {compareNum && !isDropShoulder && (
                   <>
-                    <span className="product-detail__compare">{formatPrice(product.comparePrice)}</span>
+                    <span className="product-detail__compare">{formatPrice(compareNum)}</span>
                     {discount > 0 && <span className="badge badge-danger">Save {discount}%</span>}
                   </>
                 )}

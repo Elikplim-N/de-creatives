@@ -1,5 +1,9 @@
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import {
+  products as initialProducts,
+  categories as initialCategories,
+  heroSlides as initialHeroSlides,
+  initialGalleryPhotos,
   initialManifesto,
   adminCredentials
 } from '../data/mockData';
@@ -105,7 +109,7 @@ export function AppProvider({ children }) {
   });
   const [galleryPhotos, setGalleryPhotos] = useState(() => {
     const saved = localStorage.getItem('de_gallery_photos');
-    return saved ? JSON.parse(saved) : [];
+    return saved ? JSON.parse(saved) : initialGalleryPhotos;
   });
   const [manifesto, setManifesto] = useState(() => {
     const saved = localStorage.getItem('de_manifesto');

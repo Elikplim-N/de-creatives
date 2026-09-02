@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Navbar from '../components/storefront/Navbar';
 import Hero from '../components/storefront/Hero';
 import NewArrivals from '../components/storefront/NewArrivals';
@@ -7,6 +9,20 @@ import Testimonials from '../components/storefront/Testimonials';
 import Footer from '../components/storefront/Footer';
 
 export default function Storefront() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.replace('#', '');
+      const el = document.getElementById(id);
+      if (el) {
+        const timer = setTimeout(() => {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }, 150);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [location.hash]);
   return (
     <div className="storefront">
       <Navbar />

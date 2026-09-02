@@ -111,7 +111,7 @@ export default function Hero() {
           {[
             { value: `${products.length}+`, label: 'Products' },
             testimonials.length > 0 && {
-              value: `${(testimonials.reduce((sum, t) => sum + t.rating, 0) / testimonials.length).toFixed(1)}★`,
+              value: `${(testimonials.reduce((sum, t) => sum + (Number(t.rating) || 5), 0) / testimonials.length).toFixed(1)}★`,
               label: 'Avg Rating',
             },
             testimonials.length > 0 && { value: `${testimonials.length}`, label: 'Reviews' },
