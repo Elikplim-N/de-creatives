@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../../context/AppContext';
 import './Gallery.css';
 
@@ -7,6 +7,42 @@ export default function Gallery() {
   const [activePhoto, setActivePhoto] = useState(null);
 
   const displayPhotos = galleryPhotos && galleryPhotos.length > 0 ? galleryPhotos : [];
+
+  const handlePrev = useCallback((e) => {
+    e?.stopPropagation();
+    if (!activePhoto || displayPhotos.length <= 1) return;
+    const currentIndex = displayPhotos.findIndex(p => p.id === activePhoto.id);
+    const prevIndex = (currentIndex - 1 + displayPhotos.length) % displayPhotos.length;
+    setActivePhoto(displayPhotos[prevIndex]);
+  }, [activePhoto, displayPhotos]);
+
+  const handleNext = useCallback((e) => {
+    e?.stopPropagation();
+    if (!activePhoto || displayPhotos.length <= 1) return;
+    const currentIndex = displayPhotos.findIndex(p => p.id === activePhoto.id);
+    const nextIndex = (currentIndex + 1) % displayPhotos.length;
+    setActivePhoto(displayPhotos[nextIndex]);
+  }, [activePhoto, displayPhotos]);
+
+  // Lock background body scroll and listen for Escape / Arrow keys
+  useEffect(() => {
+    if (activePhoto) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Escape') setActivePhoto(null);
+        if (e.key === 'ArrowLeft') handlePrev();
+        if (e.key === 'ArrowRight') handleNext();
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [activePhoto, handlePrev, handleNext]);
 
   return (
     <section className="gallery-section" id="gallery" aria-label="Visual gallery and lookbook">
@@ -74,36 +110,66 @@ export default function Gallery() {
             onClick={() => setActivePhoto(null)}
             aria-label="Close photo preview"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
 
+          {displayPhotos.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="gallery-lightbox__nav gallery-lightbox__nav--prev"
+                onClick={handlePrev}
+                aria-label="Previous photo"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="gallery-lightbox__nav gallery-lightbox__nav--next"
+                onClick={handleNext}
+                aria-label="Next photo"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </>
+          )}
+
           <div className="gallery-lightbox__content" onClick={e => e.stopPropagation()}>
-            <img
-              src={activePhoto.src}
-              alt={activePhoto.title}
-              className="gallery-lightbox__img"
-            />
+            <div className="gallery-lightbox__img-wrap">
+              <img
+                src={activePhoto.src}
+                alt={activePhoto.title}
+                className="gallery-lightbox__img"
+              />
+            </div>
             <div className="gallery-lightbox__caption">
-              <div>
-                <span className="gallery-item__tag" style={{ marginBottom: '6px', display: 'inline-block' }}>
-                  {activePhoto.tag}
-                </span>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#fff', fontFamily: 'var(--font-accent)' }}>
+              <div className="gallery-lightbox__info">
+                {activePhoto.tag && (
+                  <span className="gallery-item__tag" style={{ marginBottom: '4px', display: 'inline-block' }}>
+                    {activePhoto.tag}
+                  </span>
+                )}
+                <h3 className="gallery-lightbox__title">
                   {activePhoto.title}
                 </h3>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  {activePhoto.category} · DE Creatives Lookbook
-                </p>
+                {activePhoto.category && (
+                  <p className="gallery-lightbox__meta">
+                    {activePhoto.category} · DE Creatives Lookbook
+                  </p>
+                )}
               </div>
               <a
                 href={`https://wa.me/233595515040?text=${encodeURIComponent(`Hello DE Creatives! I saw this photo on your gallery and would like to inquire about ordering: ${activePhoto.title}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn btn-primary btn-sm"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#25D366', borderColor: '#25D366' }}
+                className="btn btn-primary btn-sm gallery-lightbox__wa-btn"
               >
                 Inquire on WhatsApp
               </a>

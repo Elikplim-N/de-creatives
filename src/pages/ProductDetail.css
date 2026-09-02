@@ -87,6 +87,33 @@ a.product-detail__crumb:hover { color: var(--turquoise); }
   object-fit: cover;
   animation: fadeSlideUp 0.3s both;
 }
+.product-detail__zoom-hint {
+  position: absolute;
+  bottom: var(--space-3);
+  right: var(--space-3);
+  background: rgba(10, 10, 12, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-full);
+  padding: 4px 10px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: all var(--transition-fast);
+  pointer-events: none;
+}
+.product-detail__main-image:hover .product-detail__zoom-hint {
+  background: var(--turquoise);
+  color: #000;
+  border-color: var(--turquoise);
+  transform: scale(1.04);
+}
 .product-detail__badge-new {
   position: absolute;
   top: var(--space-4);

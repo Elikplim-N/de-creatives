@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import Navbar from '../components/storefront/Navbar';
@@ -28,7 +28,21 @@ export default function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [sizeError, setSizeError] = useState(false);
   const [showSizeGuideModal, setShowSizeGuideModal] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
   const [sizeUnit, setSizeUnit] = useState('in'); // 'in' or 'cm'
+
+  useEffect(() => {
+    if (zoomOpen) {
+      const orig = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const handleKey = (e) => { if (e.key === 'Escape') setZoomOpen(false); };
+      window.addEventListener('keydown', handleKey);
+      return () => {
+        document.body.style.overflow = orig;
+        window.removeEventListener('keydown', handleKey);
+      };
+    }
+  }, [zoomOpen]);
 
   const handleFitChange = (fit) => {
     setSelectedFit(fit);
@@ -108,13 +122,31 @@ export default function ProductDetail() {
                   </button>
                 ))}
               </div>
-              <div className="product-detail__main-image">
+              <div
+                className="product-detail__main-image"
+                onClick={() => setZoomOpen(true)}
+                style={{ cursor: 'zoom-in' }}
+                title="Click to enlarge"
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setZoomOpen(true); }}
+                aria-label="Click to enlarge product photo"
+              >
                 <img
                   src={images[activeImage] || '/logo.png'}
                   alt={product.name}
                   key={activeImage}
                   className="product-detail__img"
                 />
+                <div className="product-detail__zoom-hint">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    <line x1="11" y1="8" x2="11" y2="14"/>
+                    <line x1="8" y1="11" x2="14" y2="11"/>
+                  </svg>
+                  Enlarge
+                </div>
                 {product.isNew && (
                   <div className="product-detail__badge-new badge badge-turquoise">New Arrival</div>
                 )}
@@ -482,6 +514,88 @@ export default function ProductDetail() {
             >
               Got It
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Product Image Fullscreen Lightbox Modal */}
+      {zoomOpen && (
+        <div
+          className="gallery-lightbox"
+          onClick={() => setZoomOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${product.name} enlarged photo`}
+        >
+          <button
+            type="button"
+            className="gallery-lightbox__close"
+            onClick={() => setZoomOpen(false)}
+            aria-label="Close photo preview"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+
+          {images.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="gallery-lightbox__nav gallery-lightbox__nav--prev"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveImage(prev => (prev - 1 + images.length) % images.length);
+                }}
+                aria-label="Previous image"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="gallery-lightbox__nav gallery-lightbox__nav--next"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveImage(prev => (prev + 1) % images.length);
+                }}
+                aria-label="Next image"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </>
+          )}
+
+          <div className="gallery-lightbox__content" onClick={e => e.stopPropagation()}>
+            <div className="gallery-lightbox__img-wrap">
+              <img
+                src={images[activeImage] || '/logo.png'}
+                alt={product.name}
+                className="gallery-lightbox__img"
+              />
+            </div>
+            <div className="gallery-lightbox__caption">
+              <div className="gallery-lightbox__info">
+                <span className="gallery-item__tag" style={{ marginBottom: '4px', display: 'inline-block' }}>
+                  {product.categoryName || 'Streetwear'}
+                </span>
+                <h3 className="gallery-lightbox__title">{product.name}</h3>
+                <p className="gallery-lightbox__meta">
+                  {formatPrice(currentUnitPrice)} · Image {activeImage + 1} of {images.length}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => setZoomOpen(false)}
+              >
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}
