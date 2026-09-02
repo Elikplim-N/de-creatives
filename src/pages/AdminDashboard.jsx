@@ -149,7 +149,7 @@ export default function AdminDashboard() {
             {sidebarOpen && (
               <div className="admin-sidebar__user-info">
                 <p className="admin-sidebar__user-name">Admin</p>
-                <p className="admin-sidebar__user-role">Store Owner</p>
+                <p className="admin-sidebar__user-role">Admin</p>
               </div>
             )}
           </div>
