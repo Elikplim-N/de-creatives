@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useApp } from '../../context/AppContext';
 import { initialGalleryPhotos } from '../../data/mockData';
 import './Gallery.css';
@@ -97,7 +98,7 @@ export default function Gallery() {
       </div>
 
       {/* Fullscreen Lightbox Modal */}
-      {activePhoto && (
+      {activePhoto && createPortal(
         <div
           className="gallery-lightbox"
           onClick={() => setActivePhoto(null)}
@@ -176,7 +177,8 @@ export default function Gallery() {
               </a>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );

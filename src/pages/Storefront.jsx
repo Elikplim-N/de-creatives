@@ -26,7 +26,7 @@ export default function Storefront() {
   return (
     <div className="storefront">
       <Navbar />
-      <main id="main-content" className="animate-fade-up" style={{ minHeight: '100vh' }}>
+      <main id="main-content" style={{ minHeight: '100vh' }}>
         <Hero />
         
         {/* New Arrivals Section - placed before Editorial */}

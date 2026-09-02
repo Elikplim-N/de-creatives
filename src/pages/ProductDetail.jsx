@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import Navbar from '../components/storefront/Navbar';
@@ -525,7 +526,7 @@ export default function ProductDetail() {
       )}
 
       {/* Product Image Fullscreen Lightbox Modal */}
-      {zoomOpen && (
+      {zoomOpen && createPortal(
         <div
           className="gallery-lightbox"
           onClick={() => setZoomOpen(false)}
@@ -603,7 +604,8 @@ export default function ProductDetail() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <Footer />
