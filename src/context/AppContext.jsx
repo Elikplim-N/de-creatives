@@ -96,11 +96,11 @@ export function AppProvider({ children }) {
   const [loginError, setLoginError] = useState('');
   const [products, setProducts] = useState(() => {
     const saved = localStorage.getItem('de_products');
-    return saved ? JSON.parse(saved) : initialProducts;
+    return saved !== null ? JSON.parse(saved) : [];
   });
   const [categories, setCategories] = useState(() => {
     const saved = localStorage.getItem('de_categories');
-    return saved ? JSON.parse(saved) : initialCategories;
+    return saved !== null ? JSON.parse(saved) : [];
   });
   const [orders, setOrders] = useState([]);
   const [testimonials, setTestimonials] = useState(() => {
@@ -113,7 +113,7 @@ export function AppProvider({ children }) {
   });
   const [heroSlides, setHeroSlides] = useState(() => {
     const saved = localStorage.getItem('de_hero_slides');
-    return saved ? JSON.parse(saved) : initialHeroSlides;
+    return saved !== null ? JSON.parse(saved) : [];
   });
   const [galleryPhotos, setGalleryPhotos] = useState(() => {
     const saved = localStorage.getItem('de_gallery_photos');
