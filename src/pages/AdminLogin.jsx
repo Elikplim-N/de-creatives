@@ -29,16 +29,16 @@ export default function AdminLogin() {
       {/* Left Panel */}
       <div className="admin-login__panel admin-login__panel--left" aria-hidden="true">
         <img
-          src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=900&q=85"
-          alt=""
+          src="/products/tee-black-girl-palm.jpg"
+          alt="DE Creatives"
           className="admin-login__bg"
         />
         <div className="admin-login__panel-overlay" />
         <div className="admin-login__panel-content">
           <img src="/logo.png" alt="DE Creatives" className="admin-login__brand-logo" />
           <blockquote className="admin-login__quote">
-            "Fashion is the armor to survive the reality of everyday life."
-            <cite>— Bill Cunningham</cite>
+            "Define Your Creative. Made in Africa, Worn by the World."
+            <cite>— Clan of DE Creatives</cite>
           </blockquote>
         </div>
       </div>
@@ -57,17 +57,6 @@ export default function AdminLogin() {
             <h1 className="admin-login__title">Admin Portal</h1>
             <p className="admin-login__subtitle">Secure access to DE Creatives management</p>
           </div>
-
-          {/* Demo Hint - only relevant when no backend is configured */}
-          {!supabase && (
-            <div className="admin-login__demo-hint" role="note">
-              <span className="admin-login__demo-icon">💡</span>
-              <div>
-                <strong>Demo Login</strong>
-                <p>Email/Username: <code>admin</code> · Password: <code>decreatives2024</code></p>
-              </div>
-            </div>
-          )}
 
           {/* Form */}
           <form className="admin-login__form" onSubmit={handleSubmit} noValidate>

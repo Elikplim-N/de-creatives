@@ -304,9 +304,15 @@ export function AppProvider({ children }) {
       return false;
     }
 
-    // No backend configured (local/dev mock-data mode) - fall back to the
-    // hardcoded demo credentials so the admin UI is still reachable.
-    if (usernameOrEmail === adminCredentials.username && password === adminCredentials.password) {
+    const normalizedUser = (usernameOrEmail || '').trim().toLowerCase();
+    const isMatched = (
+      (normalizedUser === adminCredentials.username.toLowerCase() ||
+       normalizedUser === 'admin@decreatives.com' ||
+       normalizedUser === 'admin') &&
+      password === adminCredentials.password
+    );
+
+    if (isMatched) {
       setIsAdminLoggedIn(true);
       setAuthLoading(false);
       showToast('Welcome back, Admin!', 'success');
