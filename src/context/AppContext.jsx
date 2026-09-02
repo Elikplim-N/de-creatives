@@ -77,8 +77,10 @@ function toDbHeroSlideFields(updates) {
 }
 
 export function AppProvider({ children }) {
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [authLoading, setAuthLoading] = useState(false);
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(() => {
+    return localStorage.getItem('de_admin_session') === 'true';
+  });
+  const [authLoading, setAuthLoading] = useState(!!supabase);
   const [loginError, setLoginError] = useState('');
   const [products, setProducts] = useState(() => {
     const saved = localStorage.getItem('de_products');
@@ -194,16 +196,25 @@ export function AppProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (!supabase) return;
+    if (!supabase) {
+      setAuthLoading(false);
+      return;
+    }
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAdminLoggedIn(!!session);
+      const loggedIn = !!session;
+      setIsAdminLoggedIn(loggedIn);
+      if (loggedIn) {
+        localStorage.setItem('de_admin_session', 'true');
+      } else {
+        localStorage.removeItem('de_admin_session');
+      }
       setAuthLoading(false);
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [showToast]);
+  }, []);
 
   // Orders are RLS-gated to authenticated users, so they can only be fetched
   // once an admin session exists - refetch whenever login state flips on.
@@ -284,6 +295,7 @@ export function AppProvider({ children }) {
 
         if (data?.user) {
           setIsAdminLoggedIn(true);
+          localStorage.setItem('de_admin_session', 'true');
           showToast('Welcome back, Admin!', 'success');
           return true;
         }
@@ -306,6 +318,7 @@ export function AppProvider({ children }) {
     if (isMatched) {
       setIsAdminLoggedIn(true);
       setAuthLoading(false);
+      localStorage.setItem('de_admin_session', 'true');
       showToast('Welcome back, Admin!', 'success');
       return true;
     }
@@ -318,14 +331,13 @@ export function AppProvider({ children }) {
     if (supabase) {
       try {
         await supabase.auth.signOut();
-        setIsAdminLoggedIn(false);
-        showToast('Logged out successfully.', 'default');
       } catch (err) {
         console.error('Error signing out:', err.message);
       }
-    } else {
-      setIsAdminLoggedIn(false);
     }
+    setIsAdminLoggedIn(false);
+    localStorage.removeItem('de_admin_session');
+    showToast('Logged out successfully.', 'default');
   }, [showToast]);
 
   // Uploads real files to Supabase Storage and returns their public URLs, in
