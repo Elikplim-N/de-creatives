@@ -21,7 +21,33 @@ export default function Hero() {
     return () => clearInterval(t);
   }, [heroSlides.length]);
 
-  if (heroSlides.length === 0) return null;
+  if (heroSlides.length === 0) {
+    return (
+      <section className="hero" id="hero" aria-label="Hero section">
+        <div className="hero__bg hero__bg--active" style={{ background: '#09090b' }}>
+          <div className="hero__overlay" style={{ background: 'radial-gradient(circle at center, rgba(37,99,235,0.18) 0%, #09090b 80%)' }} />
+        </div>
+        <div className="hero__content container">
+          <div className="hero__text">
+            <span className="hero__eyebrow">
+              <span className="hero__eyebrow-dot" />
+              DE CREATIVES — ACCRA
+            </span>
+            <h1 className="hero__heading">
+              <span className="hero__heading-line">DEFINE YOUR</span>
+              <span className="hero__heading-line hero__heading-accent">CREATIVE</span>
+            </h1>
+            <p className="hero__subheading">Premium streetwear engineered for the bold. Made in Africa, worn by the world.</p>
+            <div className="hero__ctas">
+              <Link to="/manifesto" className="btn btn-primary btn-lg hero__cta-primary">
+                Explore Clan of DE
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const slide = heroSlides[current % heroSlides.length];
 

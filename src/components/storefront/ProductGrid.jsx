@@ -53,7 +53,20 @@ export default function ProductGrid() {
         </div>
 
         {/* Grid */}
-        {filteredProducts.length === 0 ? (
+        {products.length === 0 ? (
+          <div className="product-grid__empty" style={{ padding: 'var(--space-16) 0' }}>
+            <div className="product-grid__empty-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              </svg>
+            </div>
+            <h3>New Collection Dropping Soon</h3>
+            <p style={{ maxWidth: '400px', margin: '0 auto var(--space-4)' }}>Our catalog is being updated with exclusive pieces. Explore our brand story in the meantime.</p>
+            <a href="/manifesto" className="btn btn-primary">
+              Welcome to Clan of DE
+            </a>
+          </div>
+        ) : filteredProducts.length === 0 ? (
           <div className="product-grid__empty">
             <div className="product-grid__empty-icon">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">

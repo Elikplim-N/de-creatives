@@ -15,18 +15,20 @@ function timeAgo(dateStr) {
 }
 
 export default function AdminOverview() {
-  const { products, orders, formatPrice } = useApp();
+  const { products, categories, orders, formatPrice, clearAllForOnboarding, resetProductsToDefault, resetCategoriesToDefault, resetHeroSlidesToDefault } = useApp();
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
+
+  const totalRevenue = orders.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0);
+  const lowStockCount = products.filter(p => p.stock <= 10).length;
 
   const topProducts = [...products]
     .sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
     .slice(0, 5);
 
-  const lowStockCount = products.filter(p => p.stock <= LOW_STOCK_THRESHOLD).length;
-  const activeOrders = orders.filter(o => o.status !== 'cancelled');
-  const totalRevenue = activeOrders.reduce((sum, o) => sum + (o.total || 0), 0);
-
   const statCards = [
-    { label: 'Total Products', icon: '📦', color: 'turquoise', value: products.length },
+    { label: 'Total Products', icon: '📦', color: 'primary', value: products.length },
+    { label: 'Categories', icon: '🏷️', color: 'turquoise', value: categories.length },
     { label: 'Total Revenue', icon: '💰', color: 'success', value: formatPrice(totalRevenue) },
     { label: 'Total Orders', icon: '🛒', color: 'info', value: orders.length },
     { label: 'Low Stock Items', icon: '⚠️', color: 'warning', value: lowStockCount },
@@ -36,6 +38,18 @@ export default function AdminOverview() {
     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
     .slice(0, 6);
 
+  const handleClearAll = () => {
+    clearAllForOnboarding();
+    setShowClearConfirm(false);
+  };
+
+  const handleRestoreAll = () => {
+    resetProductsToDefault();
+    resetCategoriesToDefault();
+    resetHeroSlidesToDefault();
+    setShowRestoreConfirm(false);
+  };
+
   return (
     <div className="admin-overview">
       <div className="admin-page-header">
@@ -43,10 +57,67 @@ export default function AdminOverview() {
           <h1 className="admin-page-title">Dashboard Overview</h1>
           <p className="admin-page-subtitle">Welcome back, Admin. Here's what's happening today.</p>
         </div>
-        <div className="admin-page-header__actions">
-          <span className="admin-overview__date">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </span>
+        <div className="admin-page-header__actions" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          {showClearConfirm ? (
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(239,68,68,0.1)', padding: '4px 8px', borderRadius: '6px' }}>
+              <span style={{ fontSize: '0.8rem', color: '#ef4444', fontWeight: 600 }}>Clear all catalog items?</span>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                onClick={handleClearAll}
+              >
+                Yes, Clear All
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => setShowClearConfirm(false)}
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              style={{ color: 'var(--text-secondary)' }}
+              onClick={() => setShowClearConfirm(true)}
+              title="Clear all demo products, categories, and hero slides to start onboarding"
+            >
+              🧹 Clear Catalog for Onboarding
+            </button>
+          )}
+
+          {showRestoreConfirm ? (
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(37,99,235,0.1)', padding: '4px 8px', borderRadius: '6px' }}>
+              <span style={{ fontSize: '0.8rem', color: '#3b82f6', fontWeight: 600 }}>Restore demo data?</span>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                style={{ color: '#3b82f6', borderColor: '#3b82f6' }}
+                onClick={handleRestoreAll}
+              >
+                Restore
+              </button>
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => setShowRestoreConfirm(false)}
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              onClick={() => setShowRestoreConfirm(true)}
+              title="Restore demo catalog"
+            >
+              ↺ Restore Demo
+            </button>
+          )}
         </div>
       </div>
 

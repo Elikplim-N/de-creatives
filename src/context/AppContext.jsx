@@ -739,6 +739,16 @@ export function AppProvider({ children }) {
     showToast('Hero slides restored to default.', 'default');
   }, [showToast]);
 
+  const clearAllForOnboarding = useCallback(() => {
+    localStorage.setItem('de_products', JSON.stringify([]));
+    localStorage.setItem('de_categories', JSON.stringify([]));
+    localStorage.setItem('de_hero_slides', JSON.stringify([]));
+    setProducts([]);
+    setCategories([]);
+    setHeroSlides([]);
+    showToast('Catalog cleared! Ready for fresh onboarding.', 'success');
+  }, [showToast]);
+
   // Public - any visitor can submit a review.
   const submitTestimonial = useCallback(async ({ name, location, text, rating }) => {
     const generatedId = (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -1049,6 +1059,7 @@ export function AppProvider({ children }) {
       addProduct, updateProduct, deleteProduct, uploadProductImages, resetProductsToDefault,
       addCategory, updateCategory, deleteCategory, resetCategoriesToDefault,
       heroSlides: sortedHeroSlides, addHeroSlide, updateHeroSlide, deleteHeroSlide, reorderHeroSlide, resetHeroSlidesToDefault,
+      clearAllForOnboarding,
       galleryPhotos, addGalleryPhoto, updateGalleryPhoto, deleteGalleryPhoto, resetGalleryPhotos,
       manifesto, updateManifesto, resetManifesto,
       addToCart, toggleWishlist, isInWishlist,

@@ -11,7 +11,9 @@ export default function ProductDetail() {
   const product = products.find(p => p.id === id);
 
   // Defensive fallbacks for Supabase arrays
-  const images = product?.images || [];
+  const images = product?.images && product.images.length > 0 ? product.images : ['/logo.png'];
+  const colors = product?.colors && product.colors.length > 0 ? product.colors : ['#0A0A0A'];
+  const colorNames = product?.colorNames && product.colorNames.length > 0 ? product.colorNames : ['Default'];
   // Fit-specific size ranges
   const REGULAR_FIT_SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL', '4XL'];
   const DROP_SHOULDER_SIZES = ['S', 'M', 'L', 'XL', '2XL'];
@@ -51,8 +53,6 @@ export default function ProductDetail() {
     );
   }
 
-  const colors = product.colors && product.colors.length > 0 ? product.colors : ['#0A0A0A'];
-  const colorNames = product.colorNames && product.colorNames.length > 0 ? product.colorNames : ['Default'];
   const currentUnitPrice = isDropShoulder ? 250.00 : product.price;
   const wishlisted = isInWishlist(product.id);
   const discount = product.comparePrice
