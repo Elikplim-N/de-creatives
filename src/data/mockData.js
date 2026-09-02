@@ -167,17 +167,20 @@ export const heroSlides = [
 
 export const testimonials = [
   {
-    id: 1, name: 'Kwame A.', location: 'Accra, Ghana',
+    id: '00000000-0000-4000-8000-000000000001',
+    name: 'Kwame A.', location: 'Accra, Ghana',
     text: 'DE Creatives completely changed how I approach fashion. The quality is unreal — these pieces are investment-grade.',
     rating: 5, avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80',
   },
   {
-    id: 2, name: 'Zara M.', location: 'Lagos, Nigeria',
+    id: '00000000-0000-4000-8000-000000000002',
+    name: 'Zara M.', location: 'Lagos, Nigeria',
     text: 'The bracket logo tee is the most premium item I own. Worth every cedi. Will be ordering again.',
     rating: 5, avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=80',
   },
   {
-    id: 3, name: 'Olu B.', location: 'London, UK',
+    id: '00000000-0000-4000-8000-000000000003',
+    name: 'Olu B.', location: 'London, UK',
     text: 'Fast shipping, incredible packaging, and the fits are exactly as advertised. DE Creatives is the real deal.',
     rating: 5, avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&q=80',
   },

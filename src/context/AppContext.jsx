@@ -627,8 +627,12 @@ export function AppProvider({ children }) {
 
   // Public - any visitor can submit a review.
   const submitTestimonial = useCallback(async ({ name, location, text, rating }) => {
+    const generatedId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : '00000000-0000-4000-8000-' + Date.now().toString(16).padStart(12, '0');
+
     const newTestimonial = {
-      id: `review-${Date.now()}`,
+      id: generatedId,
       name,
       location: location || null,
       text,
@@ -640,7 +644,12 @@ export function AppProvider({ children }) {
     if (supabase) {
       try {
         const { error } = await supabase.from('de_testimonials').insert([{
-          name, location: location || null, text, rating: Number(rating) || 5, is_approved: false,
+          id: generatedId,
+          name,
+          location: location || null,
+          text,
+          rating: Number(rating) || 5,
+          is_approved: false,
         }]);
         if (error) console.warn('Supabase testimonial insert warning:', error.message);
       } catch (err) {
@@ -660,7 +669,10 @@ export function AppProvider({ children }) {
 
   // Admin-only moderation actions.
   const approveTestimonial = useCallback(async (id) => {
-    if (supabase) {
+    const idStr = String(id);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idStr);
+
+    if (supabase && isUuid) {
       try {
         const { error } = await supabase.from('de_testimonials').update({ is_approved: true }).eq('id', id);
         if (error) console.warn('Supabase testimonial update warning:', error.message);
@@ -670,8 +682,8 @@ export function AppProvider({ children }) {
     }
 
     setPendingTestimonials(prev => {
-      const target = prev.find(t => t.id === id);
-      const remaining = prev.filter(t => t.id !== id);
+      const target = prev.find(t => String(t.id) === idStr);
+      const remaining = prev.filter(t => String(t.id) !== idStr);
       localStorage.setItem('de_pending_testimonials', JSON.stringify(remaining));
       if (target) {
         setTestimonials(tList => {
@@ -688,7 +700,10 @@ export function AppProvider({ children }) {
 
   // Handles both rejecting a pending review and removing an already-live one.
   const rejectTestimonial = useCallback(async (id) => {
-    if (supabase) {
+    const idStr = String(id);
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idStr);
+
+    if (supabase && isUuid) {
       try {
         const { error } = await supabase.from('de_testimonials').delete().eq('id', id);
         if (error) console.warn('Supabase testimonial delete warning:', error.message);
@@ -698,13 +713,13 @@ export function AppProvider({ children }) {
     }
 
     setPendingTestimonials(prev => {
-      const updated = prev.filter(t => t.id !== id);
+      const updated = prev.filter(t => String(t.id) !== idStr);
       localStorage.setItem('de_pending_testimonials', JSON.stringify(updated));
       return updated;
     });
 
     setTestimonials(prev => {
-      const updated = prev.filter(t => t.id !== id);
+      const updated = prev.filter(t => String(t.id) !== idStr);
       localStorage.setItem('de_testimonials', JSON.stringify(updated));
       return updated;
     });
