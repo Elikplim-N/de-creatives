@@ -51,6 +51,8 @@ export default function ProductDetail() {
     );
   }
 
+  const colors = product.colors && product.colors.length > 0 ? product.colors : ['#0A0A0A'];
+  const colorNames = product.colorNames && product.colorNames.length > 0 ? product.colorNames : ['Default'];
   const currentUnitPrice = isDropShoulder ? 250.00 : product.price;
   const wishlisted = isInWishlist(product.id);
   const discount = product.comparePrice
