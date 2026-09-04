@@ -136,11 +136,12 @@ export const api = {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
-  async addSubscriber(email) {
+  async addSubscriber(email, type = 'all') {
+    const payload = typeof email === 'object' ? email : { email, type };
     const res = await fetch(`${API_BASE}/subscribers`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+      body: JSON.stringify(payload)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();

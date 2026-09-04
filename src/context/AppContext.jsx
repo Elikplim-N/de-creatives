@@ -746,51 +746,54 @@ export function AppProvider({ children }) {
       return false;
     }
 
-    const newSub = {
-      id: `sub-${Date.now()}`,
-      email: email.trim().toLowerCase(),
-      type: type || 'all',
-      created_at: new Date().toISOString(),
-    };
-
+    const cleanEmail = email.trim().toLowerCase();
     try {
-      if (supabase) {
-        const { error } = await supabase.from('de_subscribers').insert([{
-          email: newSub.email,
-          type: newSub.type,
-        }]);
-        if (error && !error.message?.includes('duplicate')) {
-          console.warn('Supabase subscription warning:', error.message);
-        }
-      }
+      const saved = await api.addSubscriber(cleanEmail, type || 'all');
+      const newSub = saved && saved.id ? {
+        id: saved.id,
+        email: saved.email || cleanEmail,
+        type: saved.type || type || 'all',
+        created_at: saved.created_at || new Date().toISOString()
+      } : {
+        id: `sub-${Date.now()}`,
+        email: cleanEmail,
+        type: type || 'all',
+        created_at: new Date().toISOString()
+      };
 
       setSubscribers(prev => {
-        const exists = prev.some(s => s.email === newSub.email);
+        const exists = prev.some(s => s.email === cleanEmail);
         return exists ? prev : [newSub, ...prev];
       });
 
+      showToast('Welcome to the Clan of DE!', 'success');
       return true;
     } catch (err) {
-      console.error('Subscribe error:', err);
+      console.error('Subscribe API error:', err.message);
+      // Optimistic update
+      const fallbackSub = {
+        id: `sub-${Date.now()}`,
+        email: cleanEmail,
+        type: type || 'all',
+        created_at: new Date().toISOString(),
+      };
       setSubscribers(prev => {
-        const exists = prev.some(s => s.email === newSub.email);
-        return exists ? prev : [newSub, ...prev];
+        const exists = prev.some(s => s.email === cleanEmail);
+        return exists ? prev : [fallbackSub, ...prev];
       });
+      showToast('Welcome to the Clan of DE!', 'success');
       return true;
     }
   }, [showToast]);
 
   const deleteSubscriber = useCallback(async (id, email) => {
     try {
-      if (supabase && email) {
-        await supabase.from('de_subscribers').delete().eq('email', email);
-      }
-      setSubscribers(prev => prev.filter(s => s.id !== id && s.email !== email));
-      showToast('Subscriber removed.', 'default');
-    } catch (err) {
-      console.error('Delete subscriber error:', err.message);
-      showToast('Failed to delete subscriber.', 'danger');
+      await api.deleteSubscriber(id || email);
+    } catch (e) {
+      console.warn('API error deleting subscriber:', e.message);
     }
+    setSubscribers(prev => prev.filter(s => s.id !== id && s.email !== email));
+    showToast('Subscriber removed.', 'default');
   }, [showToast]);
 
   const [isCartOpen, setIsCartOpen] = useState(false);

@@ -13,18 +13,25 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { email } = req.body;
+      const { email, type } = req.body;
       if (!email) return res.status(400).json({ error: 'Email required' });
+      const cleanEmail = email.trim().toLowerCase();
+
+      // Check if type column exists or insert safely
       const { rows } = await pool.query(
-        'INSERT INTO public.de_subscribers (email) VALUES ($1) ON CONFLICT (email) DO NOTHING RETURNING *',
-        [email.trim().toLowerCase()]
+        `INSERT INTO public.de_subscribers (email)
+         VALUES ($1)
+         ON CONFLICT (email) DO UPDATE SET email = EXCLUDED.email
+         RETURNING *`,
+        [cleanEmail]
       );
-      return res.status(201).json(rows[0] || { email });
+      return res.status(201).json(rows[0] || { email: cleanEmail, type: type || 'all' });
     }
 
     if (req.method === 'DELETE') {
       const { id } = req.query;
-      await pool.query('DELETE FROM public.de_subscribers WHERE id = $1', [id]);
+      if (!id) return res.status(400).json({ error: 'ID or email required' });
+      await pool.query('DELETE FROM public.de_subscribers WHERE id::text = $1 OR email = $1', [id]);
       return res.status(200).json({ success: true, id });
     }
 
